@@ -114,6 +114,3 @@ class Trainer:
             loss = self.train_step(states, actions, rtgs, timesteps, mask)
             if epoch % 100 == 0:
                 print(f"Epoch: {epoch} - Loss: {loss:.4f}")
-
-                    
-    

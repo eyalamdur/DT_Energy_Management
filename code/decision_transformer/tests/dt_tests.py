@@ -1,8 +1,6 @@
 from decision_transformer.decision_transformer import DecisionTransformer
 from decision_transformer.trainer import Trainer
-import gymnasium as gym
 import decision_transformer.utils as utils
-import gym_anm
 
 def main():
     # Create the environment

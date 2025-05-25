@@ -1,6 +1,24 @@
 import numpy as np
 import gymnasium as gym
 
+def create_environment(env_name : str, entry_point : str) -> gym.Env:
+    """
+    Create a gym environment with the specified name and maximum episode steps.
+    Args:
+        env_name (str): The name of the environment to create.
+        entry_point (str): The entry point for the environment.
+    Returns:
+        env (gym.Env): The created gym environment.
+    """
+    from gymnasium.envs.registration import registry
+    # Check if env is already registered
+    if env_name not in [spec.id for spec in registry.values()]:
+        print(f"Registering environment '{env_name}'.")
+        gym.register(id=env_name, entry_point=entry_point)
+
+    # Create and return the environment
+    return gym.make(env_name)
+
 
 def collect_trajectories(env: gym.Env, num_episodes: int = 500, min_traj_length: int = 20) -> list :
     """

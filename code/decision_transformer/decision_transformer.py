@@ -29,14 +29,16 @@ class DecisionTransformer(nn.Module):
         self.n_head = n_head
         self.max_episode_len = max_episode_len
         self.seq_len = seq_len
+        
+        # Normalization parameters
         self.action_min = None
         self.action_max = None
 
         # We must use embed_dim=n_heads*N in order to break the input into tokens
-        assert embed_dim % n_head == 0, f"embed_dim must be divisible by num_heads (got embed_dim: {embed_dim} and num_heads: {n_head})"
-            
-        config = transformers.GPT2Config(n_embd = self.embed_dim,n_layer = self.n_layer,n_head = self.n_head)
-        
+        assert embed_dim % n_head == 0, f"embed_dim must be divisible by num_heads (got embed_dim: {embed_dim} and num_heads: {n_head})"
+
+        config = transformers.GPT2Config(n_embd=self.embed_dim, n_layer=self.n_layer, n_head=self.n_head)
+
         self.embed_ln = nn.LayerNorm(embed_dim)
         self.transformer = GPT2Model(config)
         self.state_embed = nn.Linear(state_dim, embed_dim)
@@ -125,8 +127,13 @@ class DecisionTransformer(nn.Module):
 
     def normalize_action(self, action):
         """
-        :param action: given action to normalize
-        :return: the normalized action
+        Normalize the given action to fit the DT engine.
+        This is min-max normalization, so it will return a value between 0 and 1.
+        If the action_min and action_max are not set, it will return the action as is.
+        Args:
+            action (torch.Tensor): Action tensor to normalize.
+        Returns:
+            torch.Tensor: Normalized action tensor.
         """
         if (self.action_min is None or self.action_max is None) or self.action_max == self.action_min:
             return action
@@ -134,8 +141,13 @@ class DecisionTransformer(nn.Module):
 
     def unnormalize_action(self, norm_action):
         """
-        :param norm_action: normalized action
-        :return: unnormalized action
+        Unnormalize the given normalized action to its original scale.
+        This is min-max normalization, so it will return the original action
+        by applying the inverse transformation.
+        Args:
+            norm_action (torch.Tensor): Normalized action tensor to unnormalize.
+        Returns:
+            torch.Tensor: Unnormalized action tensor.
         """
         if (self.action_min is None or self.action_max is None) or self.action_max == self.action_min:
             return norm_action

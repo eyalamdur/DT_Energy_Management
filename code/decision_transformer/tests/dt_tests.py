@@ -1,3 +1,4 @@
+import numpy as np
 from decision_transformer.decision_transformer import DecisionTransformer
 from decision_transformer.trainer import Trainer
 import decision_transformer.utils as utils

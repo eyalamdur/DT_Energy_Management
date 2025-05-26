@@ -26,6 +26,11 @@ class Trainer:
         if len(valid_trajectories) == 0:
             raise ValueError("No valid trajectories with the required sequence length.")
 
+        all_actions = np.concatenate([traj['actions'] for traj in trajectories], axis=0)
+
+        self.model.action_min = np.min(all_actions, axis=0)
+        self.model.action_max = np.max(all_actions, axis=0)
+
         # Initialize batches arrays
         state_dim = valid_trajectories[0]['states'].shape[1]
         action_dim = valid_trajectories[0]['actions'].shape[1]
@@ -55,7 +60,9 @@ class Trainer:
 
             # Fill data
             state_batch[i, :actual_seq_len] = state_seq
-            act_batch[i, :actual_seq_len] = act_seq
+            # normalize actions
+            act_batch[i, :actual_seq_len] = \
+                (act_seq - self.model.action_min) / (self.model.action_max - self.model.action_min)
             rtg_batch[i, :actual_seq_len] = rtg_seq
             timestep_batch[i, :actual_seq_len] = timestep_seq
 
@@ -112,5 +119,6 @@ class Trainer:
             loss = self.train_step(states, actions, rtgs, timesteps, mask)
             if epoch % 100 == 0:
                 print(f"Epoch: {epoch} - Loss: {loss:.4f}")
+
                     
     

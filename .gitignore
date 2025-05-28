@@ -3,7 +3,6 @@
 
 # Ignore environment files
 .venv_ai_project/
-<<<<<<< HEAD
 
 # Ignore Python cache files
 __pycache__/

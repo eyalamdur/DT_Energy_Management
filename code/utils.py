@@ -1,5 +1,7 @@
 import numpy as np
 import gymnasium as gym
+from typing import List, Dict, Optional, Union
+from stable_baselines3.common.base_class import BaseAlgorithm  # parent of PPO, TD3, etc.
 
 # -------------------------------------------- Environment Utilities -------------------------------------------- #
 def create_environment(env_name : str, entry_point : str) -> gym.Env:
@@ -19,39 +21,52 @@ def create_environment(env_name : str, entry_point : str) -> gym.Env:
     # Create and return the environment
     return gym.make(env_name)
 
-def collect_trajectories(env: gym.Env, num_episodes: int = 500, min_traj_length: int = 20) -> list :
+def collect_trajectories(
+    env: gym.Env,
+    model: Optional[BaseAlgorithm] = None,
+    num_episodes: int = 10,
+    min_traj_length: int = 1,
+    max_traj_length: int = 100,
+    deterministic: bool = True
+) -> List[Dict[str, np.ndarray]]:
     """
-    Collect trajectories from the specified environment.
+    Collect trajectories using a model or random actions. Stores return-to-go (RTG) instead of rewards.
     Args:
-        env (str): The name of the environment to collect trajectories from.
-        num_episodes (int): The number of episodes to collect.
-        min_traj_length (int): minimum size of a trajectory
+        env (gym.Env): The environment.
+        model (BaseAlgorithm or None): PPO, TD3, or None for random actions.
+        num_episodes (int): Number of episodes to collect.
+        min_traj_length (int): Minimum length to keep a trajectory.
+        deterministic (bool): If using model, whether actions are deterministic.
     Returns:
-        trajectories (list): A list of collected trajectories.
+        List[Dict]: Each dict contains 'states', 'actions', 'rtgs' for one episode.
     """
-    # Collect trajectories
     trajectories = []
+
     for _ in range(num_episodes):
-        print(f"Collecting episode {_ + 1}/{num_episodes}")
         obs, _ = env.reset()
-        done = False
         states, actions, rewards = [], [], []
-        while not done:
-            action = env.action_space.sample()
+
+        for _ in range(max_traj_length): 
+            # Use model to predict action or sample from action space if no model is provided
+            action = model.predict(obs, deterministic=deterministic)[0] if model else env.action_space.sample()
             next_obs, reward, terminated, truncated, _ = env.step(action)
-            done = terminated or truncated
+
             states.append(obs)
             actions.append(action)
             rewards.append(reward)
             obs = next_obs
-        # filter out short episodes
+            
+            if terminated or truncated:
+                break
+
         if len(states) >= min_traj_length:
-            rtgs = np.cumsum(rewards[::-1])[::-1]
+            rtgs = np.cumsum(rewards[::-1])[::-1]  # Return-to-go at each timestep
             trajectories.append({
                 "states": np.array(states),
                 "actions": np.array(actions),
                 "rtgs": rtgs
             })
+
     return trajectories
 
 # ----------------------------------------------- Model Utilities ----------------------------------------------- #

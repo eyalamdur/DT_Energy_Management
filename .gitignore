@@ -8,8 +8,5 @@
 code/models/*.zip
 
 # Ignore Python cache files
-__pycache__/
-code/__pycache__/
-code/decision_transformer/__pycache__/
-code/models/__pycache__/*
+**/__pycache__/
 code/decision_transformer.egg-info/*

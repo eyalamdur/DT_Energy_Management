@@ -2,6 +2,7 @@ from decision_transformer.decision_transformer import DecisionTransformer
 from decision_transformer.trainer import Trainer
 import utils
 import gym_anm
+import torch
 
 def main():
     # Create the environment
@@ -16,13 +17,14 @@ def main():
     state_dim = trajectories[0]["states"].shape[1]
     act_dim = trajectories[0]["actions"].shape[1]
     rtg_dim = 1
-    
+
     # Define the boundaries for actions based on the environment's action space
     boundaries = env.action_space.low, env.action_space.high
 
     dt_model = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
-    print ("Model created successfully.")
-    
+    print("Model created successfully.")
+    torch.save(dt_model.state_dict(), "decision_transformer.pth")
+
     # Create the trainer
     trainer = Trainer(dt_model, None, 64)
     trainer.train(trajectories)

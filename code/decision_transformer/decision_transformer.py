@@ -67,6 +67,7 @@ class DecisionTransformer(nn.Module):
         if mask is None:
             mask = torch.ones((batch_size, seq_len), dtype=torch.long)
 
+        actions = actions.float()
         # Embedding the inputs
         state_embeddings = self.state_embed(states)
         action_embeddings = self.action_embed(actions)
@@ -79,13 +80,14 @@ class DecisionTransformer(nn.Module):
         action_embeddings = action_embeddings + timestep_embeddings
         rtg_embeddings = rtg_embeddings + timestep_embeddings
 
+        actual_seq_len = rtg_embeddings.shape[1]
         # this makes the sequence look like (R_1, s_1, a_1, R_2, s_2, a_2, ...)
         stacked_inputs = torch.stack((rtg_embeddings, state_embeddings, action_embeddings),
-                                     dim=1).permute(0, 2, 1, 3).reshape(batch_size, 3*self.seq_len, self.embed_dim)
+                                     dim=1).permute(0, 2, 1, 3).reshape(batch_size, 3*actual_seq_len, self.embed_dim)
         stacked_inputs = self.embed_ln(stacked_inputs)
 
         # to make the attention mask fit the stacked inputs, have to stack it as well
-        stacked_attention_mask = torch.stack((mask, mask, mask), dim=1).permute(0, 2, 1).reshape(batch_size, 3*self.seq_len)
+        stacked_attention_mask = torch.stack((mask, mask, mask), dim=1).permute(0, 2, 1).reshape(batch_size, 3*actual_seq_len)
 
         # we feed in the input embeddings (not word indices as in NLP) to the model
         transformer_outputs = self.transformer(inputs_embeds=stacked_inputs,attention_mask=stacked_attention_mask)
@@ -93,7 +95,7 @@ class DecisionTransformer(nn.Module):
 
         # reshape x so that the second dimension corresponds to the original
         # returns (0), states (1), or actions (2); i.e. x[:,1,t] is the token for s_t
-        x = x.reshape(batch_size, self.seq_len, 3, self.embed_dim).permute(0, 2, 1, 3)
+        x = x.reshape(batch_size, actual_seq_len, 3, self.embed_dim).permute(0, 2, 1, 3)
 
         # get predictions
         return_preds = self.predict_return(x[:,2])  # predict next return given state and action
@@ -123,7 +125,11 @@ class DecisionTransformer(nn.Module):
         if self.action_min is not None and self.action_max is not None:
             action_preds = self.unnormalize_action(action_preds)
 
-        return action_preds[0,-1]
+        action = action_preds[0, -1].detach().cpu().numpy()
+
+        action = np.clip(action, self.action_min, self.action_max)
+
+        return action
 
     def normalize_action(self, action):
         """
@@ -135,7 +141,7 @@ class DecisionTransformer(nn.Module):
         Returns:
             torch.Tensor: Normalized action tensor.
         """
-        if (self.action_min is None or self.action_max is None) or self.action_max == self.action_min:
+        if self.action_min is None or self.action_max is None:
             return action
         return 2 * (action - self.action_min) / (self.action_max - self.action_min) - 1
 
@@ -149,6 +155,11 @@ class DecisionTransformer(nn.Module):
         Returns:
             torch.Tensor: Unnormalized action tensor.
         """
-        if (self.action_min is None or self.action_max is None) or self.action_max == self.action_min:
+        print(norm_action)
+        self.action_min = torch.tensor(self.action_min, dtype=torch.float32)
+        self.action_max = torch.tensor(self.action_max, dtype=torch.float32)
+        print(self.action_min)
+        print(self.action_max)
+        if self.action_min is None or self.action_max is None:
             return norm_action
         return ((norm_action + 1) / 2) * (self.action_max - self.action_min) + self.action_min

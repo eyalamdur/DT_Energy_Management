@@ -7,13 +7,15 @@ def evaluate_DT (env: gym.Env, model, num_episodes: int = 10, max_episode_length
     returns = []
 
     for episode in range(num_episodes):
+        print("episode: ", episode)
         ret = episode_evaluation_DT(env, model, max_episode_length)
         returns.append(ret)
+        print("ret: ", ret)
 
     return np.mean(returns)
 
 
-def episode_evaluation_DT (env: gym.Env, model, max_episode_length = 1000, target_rtg = 100):
+def episode_evaluation_DT (env: gym.Env, model, max_episode_length = 1000, target_rtg = 10):
 
     # Initialize evaluate params
     state, _ = env.reset()
@@ -42,8 +44,8 @@ def episode_evaluation_DT (env: gym.Env, model, max_episode_length = 1000, targe
         # getting the action prediction from the model
         action = model.get_action(state_tensor, action_tensor, rtg_tensor, timestep_tensor)
         next_state, reward, terminated, truncated, _ = env.step(action)
-        env.render()
-        time.sleep(0.5)
+        # env.render()
+        # time.sleep(0.5)
 
         states.append(state)
         actions.append(action)
@@ -57,7 +59,7 @@ def episode_evaluation_DT (env: gym.Env, model, max_episode_length = 1000, targe
         cumulative_reword += reward
         steps += 1
 
-    return cumulative_reword
+    return cumulative_reword / steps
 
 
 

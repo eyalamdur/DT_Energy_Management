@@ -32,10 +32,9 @@ def main():
     dt_model.load_state_dict(torch.load("decision_transformer.pth"))
 
     print("dt loaded successfully")
-    # dt_model = dt_model.float()
-    # print("dt float successfully")
+    
 
-    evaluate_models(env, dt_model)
+    evaluate_models(env, dt_model, num_episodes=5, max_episode_length=50)
     print("evaluate successfully")
     # evaluate_models(env, dt_model, ppo_model)
     # ppo_model = model.load_state_dict(torch.load("ppo_model.pt"))

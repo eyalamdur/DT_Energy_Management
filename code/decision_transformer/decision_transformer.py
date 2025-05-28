@@ -155,11 +155,8 @@ class DecisionTransformer(nn.Module):
         Returns:
             torch.Tensor: Unnormalized action tensor.
         """
-        print(norm_action)
         self.action_min = torch.tensor(self.action_min, dtype=torch.float32)
         self.action_max = torch.tensor(self.action_max, dtype=torch.float32)
-        print(self.action_min)
-        print(self.action_max)
         if self.action_min is None or self.action_max is None:
             return norm_action
         return ((norm_action + 1) / 2) * (self.action_max - self.action_min) + self.action_min

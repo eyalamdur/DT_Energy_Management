@@ -6,7 +6,7 @@ from transformers import GPT2Model, GPT2Config
 
 
 class DecisionTransformer(nn.Module):
-    def __init__(self, state_dim: int, act_dim: int, rtg_dim: int = 1, embed_dim: int = 128,
+    def __init__(self, env_boundries: list, state_dim: int, act_dim: int, rtg_dim: int = 1, embed_dim: int = 128,
                  n_layer: int = 8, n_head: int = 8, max_episode_len: int = 1024, seq_len: int = 20):
         """
         C'tor for the DecisionTransformer class.
@@ -31,8 +31,8 @@ class DecisionTransformer(nn.Module):
         self.seq_len = seq_len
         
         # Normalization parameters
-        self.action_min = None
-        self.action_max = None
+        self.action_min = env_boundries[0] if len(env_boundries) > 0 else None
+        self.action_max = env_boundries[1] if len(env_boundries) > 1 else None
 
         # We must use embed_dim=n_heads*N in order to break the input into tokens
         assert embed_dim % n_head == 0, f"embed_dim must be divisible by num_heads (got embed_dim: {embed_dim} and num_heads: {n_head})"
@@ -137,7 +137,7 @@ class DecisionTransformer(nn.Module):
         """
         if (self.action_min is None or self.action_max is None) or self.action_max == self.action_min:
             return action
-        return (action - self.action_min) / (self.action_max - self.action_min)
+        return 2 * (action - self.action_min) / (self.action_max - self.action_min) - 1
 
     def unnormalize_action(self, norm_action):
         """
@@ -151,4 +151,4 @@ class DecisionTransformer(nn.Module):
         """
         if (self.action_min is None or self.action_max is None) or self.action_max == self.action_min:
             return norm_action
-        return norm_action * (self.action_max - self.action_min) + self.action_min
+        return ((norm_action + 1) / 2) * (self.action_max - self.action_min) + self.action_min

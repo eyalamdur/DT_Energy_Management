@@ -4,6 +4,9 @@
 # Ignore environment files
 .venv_ai_project/
 
+# Ignore models implementation files
+code/models/*.zip
+
 # Ignore Python cache files
 __pycache__/
 code/__pycache__/

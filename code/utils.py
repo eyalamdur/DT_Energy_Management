@@ -1,6 +1,7 @@
 import numpy as np
 import gymnasium as gym
 
+# -------------------------------------------- Environment Utilities -------------------------------------------- #
 def create_environment(env_name : str, entry_point : str) -> gym.Env:
     """
     Create a gym environment with the specified name and maximum episode steps.
@@ -13,12 +14,10 @@ def create_environment(env_name : str, entry_point : str) -> gym.Env:
     from gymnasium.envs.registration import registry
     # Check if env is already registered
     if env_name not in [spec.id for spec in registry.values()]:
-        print(f"Registering environment '{env_name}'.")
         gym.register(id=env_name, entry_point=entry_point)
 
     # Create and return the environment
     return gym.make(env_name)
-
 
 def collect_trajectories(env: gym.Env, num_episodes: int = 500, min_traj_length: int = 20) -> list :
     """
@@ -54,3 +53,33 @@ def collect_trajectories(env: gym.Env, num_episodes: int = 500, min_traj_length:
                 "rtgs": rtgs
             })
     return trajectories
+
+# ----------------------------------------------- Model Utilities ----------------------------------------------- #
+def is_model_available(model_name: str) -> bool:
+    """
+    Check if a model is available in the current directory.
+    Args:
+        model_name (str): The name of the model to check.
+    Returns:
+        bool: True if the model is available, False otherwise.
+    """
+    import os
+    return os.path.exists(f"{model_name}.zip") or os.path.exists(model_name)
+
+# ----------------------------------------------- Print Utilities ----------------------------------------------- #
+def color_print(text: str, color: str = "blue") -> None:
+    """
+    Print text in a specified color.
+    Args:
+        text (str): The text to print.
+        color (str): The color to print the text in. Options are 'red', 'green', 'blue', 'yellow'.
+    """
+    colors = {
+        "red": "\033[91m",
+        "green": "\033[92m",
+        "blue": "\033[94m",
+        "yellow": "\033[93m",
+        "reset": "\033[0m"
+    }
+    print(f"{colors.get(color, colors['blue'])}{text}{colors['reset']}")
+    

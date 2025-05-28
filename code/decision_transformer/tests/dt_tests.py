@@ -16,7 +16,7 @@ def main():
     state_dim = trajectories[0]["states"].shape[1]
     act_dim = trajectories[0]["actions"].shape[1]
     rtg_dim = 1
-    
+
     # Define the boundaries for actions based on the environment's action space
     boundaries = env.action_space.low, env.action_space.high
 

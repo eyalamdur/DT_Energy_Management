@@ -1,0 +1,10 @@
+# Ignore VSCode settings
+.vscode/
+
+# Ignore environment files
+.venv_ai_project/
+
+# Ignore Python cache files
+__pycache__/
+code/__pycache__/
+code/decision_transformer/__pycache__/

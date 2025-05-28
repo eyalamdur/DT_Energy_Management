@@ -7,15 +7,14 @@ def evaluate_DT (env: gym.Env, model, num_episodes: int = 10, max_episode_length
     returns = []
 
     for episode in range(num_episodes):
-        print("episode: ", episode)
         ret = episode_evaluation_DT(env, model, max_episode_length)
         returns.append(ret)
-        print("ret: ", ret)
+        print("episode ", episode, ": ret: ", ret)
 
     return np.mean(returns)
 
 
-def episode_evaluation_DT (env: gym.Env, model, max_episode_length = 1000, target_rtg = 10):
+def episode_evaluation_DT (env: gym.Env, model, max_episode_length = 1000, target_rtg = 1000):
 
     # Initialize evaluate params
     state, _ = env.reset()
@@ -59,7 +58,7 @@ def episode_evaluation_DT (env: gym.Env, model, max_episode_length = 1000, targe
         cumulative_reword += reward
         steps += 1
 
-    return cumulative_reword / steps
+    return cumulative_reword
 
 
 

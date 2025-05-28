@@ -23,7 +23,7 @@ def main():
 
     dt_model = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
     print("Model created successfully.")
-    torch.save(dt_model.state_dict(), "decision_transformer.pth")
+    # torch.save(dt_model.state_dict(), "random_decision_transformer.pth")
 
     # Create the trainer
     trainer = Trainer(dt_model, None, 64)

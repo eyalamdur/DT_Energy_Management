@@ -1,13 +1,14 @@
-
+import code.models.ppo.train_ppo as ppo
+import gymnasium as gym
+import numpy as np
 
 def evaluate_PPO (env: gym.Env, model, num_episodes: int = 10, max_episode_length = 1000):
     returns = []
 
     for episode in range(num_episodes):
-        print("episode: ", episode)
         ret = episode_evaluation_PPO(env, model, max_episode_length)
         returns.append(ret)
-        print("ret: ", ret)
+        print("episode ", episode, ": ret: ", ret)
 
     return np.mean(returns)
 
@@ -21,7 +22,7 @@ def episode_evaluation_PPO (env: gym.Env, model, max_episode_length = 1000, targ
     # run the test using env.step and sum the rewards
     steps = 0
     while not done and steps < max_episode_length:
-        action = model.predict(state, deterministic = deterministic)[0]
+        action = model.predict(state)[0]
         state, reward, terminated, truncated, _ = env.step(action)
         cumulative_reword += reward
         steps += 1

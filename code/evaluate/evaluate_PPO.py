@@ -8,7 +8,7 @@ def evaluate_PPO (env: gym.Env, model, num_episodes: int = 10, max_episode_lengt
     for episode in range(num_episodes):
         ret = episode_evaluation_PPO(env, model, max_episode_length)
         returns.append(ret)
-        print("episode ", episode, ": ret: ", ret)
+        print(f"episode {episode} : ret: {ret:.3f}")
 
     return np.mean(returns)
 
@@ -29,4 +29,4 @@ def episode_evaluation_PPO (env: gym.Env, model, max_episode_length = 1000, targ
         if terminated or truncated:
             done = True
 
-    return cumulative_reword
+    return cumulative_reword / steps

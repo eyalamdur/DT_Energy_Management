@@ -1,0 +1,70 @@
+Environment created successfully.
+dt models loaded successfully
+ppo loaded successfully
+td3 loaded successfully
+*************************************
+max episode length:  100 episodes:  10
+EVALUATE DT:
+random :
+episode 0 : ret: -9.161
+episode 1 : ret: -9.091
+episode 2 : ret: -10.142
+episode 3 : ret: -9.445
+episode 4 : ret: -9.777
+episode 5 : ret: -10.594
+episode 6 : ret: -10.991
+episode 7 : ret: -9.069
+episode 8 : ret: -9.567
+episode 9 : ret: -9.508
+random mean: -9.735
+PPO :
+episode 0 : ret: -2.729
+episode 1 : ret: -2.738
+episode 2 : ret: -2.474
+episode 3 : ret: -2.476
+episode 4 : ret: -2.690
+episode 5 : ret: -2.468
+episode 6 : ret: -2.760
+episode 7 : ret: -2.583
+episode 8 : ret: -2.498
+episode 9 : ret: -2.455
+PPO mean: -2.587
+TD3 :
+episode 0 : ret: -72.209
+episode 1 : ret: -72.505
+episode 2 : ret: -72.300
+episode 3 : ret: -72.901
+episode 4 : ret: -71.905
+episode 5 : ret: -72.320
+episode 6 : ret: -72.207
+episode 7 : ret: -72.471
+episode 8 : ret: -72.755
+episode 9 : ret: -72.943
+TD3 mean: -72.452
+EVALUATE RL:
+ppo :
+episode 0 : ret: -2.651
+episode 1 : ret: -2.491
+episode 2 : ret: -2.554
+episode 3 : ret: -2.331
+episode 4 : ret: -2.383
+episode 5 : ret: -2.350
+episode 6 : ret: -2.607
+episode 7 : ret: -2.334
+episode 8 : ret: -2.426
+episode 9 : ret: -2.329
+ppo mean: -2.446
+td3 :
+episode 0 : ret: -73.283
+episode 1 : ret: -72.652
+episode 2 : ret: -73.086
+episode 3 : ret: -72.649
+episode 4 : ret: -72.645
+episode 5 : ret: -72.695
+episode 6 : ret: -73.222
+episode 7 : ret: -72.820
+episode 8 : ret: -72.648
+episode 9 : ret: -72.647
+td3 mean: -72.835
+*************************************
+evaluate successfully

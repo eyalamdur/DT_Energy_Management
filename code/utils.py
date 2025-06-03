@@ -73,6 +73,39 @@ def collect_trajectories(
 
     return trajectories
 
+
+def print_stats(stats_file, step, state, action, reward, done):
+    lines = []
+
+    lines.append(f"     step: {step}")
+
+    # Device labels for paired P and Q in state
+    device_labels = ["Slack", "Load1", "PV", "Load2", "Wind", "EV", "Storage"]
+
+    lines.append("         state:")
+    for i, label in enumerate(device_labels):
+        p = state[i]
+        q = state[i + 7]
+        lines.append(f"             {label:<8} P: {p:>7.3f}   Q: {q:>7.3f}")
+
+    # Additional state values
+    lines.append(f"             Storage SoC     : {state[14]:7.3f}")
+    lines.append(f"             PV Max          : {state[15]:7.3f}")
+    lines.append(f"             Wind Max        : {state[16]:7.3f}")
+    lines.append(f"             Time Index      : {int(state[17])}")
+
+    # Actions
+    lines.append("         action:")
+    lines.append(f"             Slack setpoint     P: {action[0]:7.3f}   Q: {action[1]:7.3f}")
+    lines.append(f"             Storage dispatch   P: {action[2]:7.3f}   Q: {action[3]:7.3f}")
+    lines.append(f"             PV curtailment     P: {action[4]:7.3f}")
+    lines.append(f"             Wind curtailment   P: {action[5]:7.3f}")
+
+    lines.append(f"         reward: {reward:.3f}")
+    lines.append(f"         done  : {done}")
+
+    # Write all lines to the file
+    stats_file.write("\n".join(lines) + "\n")
 # ----------------------------------------------- Model Utilities ----------------------------------------------- #
 def is_model_available(model_name: str) -> bool:
     """

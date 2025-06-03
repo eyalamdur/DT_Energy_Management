@@ -1,0 +1,15 @@
+Environment created successfully.
+DT models loaded successfully.
+PPO model loaded successfully.
+TD3 model loaded successfully.
+*************************************
+max episode length: 100, episodes: 10
+EVALUATE DT:
+random mean: -9.535
+PPO mean: -2.512
+TD3 mean: -72.385
+EVALUATE RL:
+ppo mean: -2.491
+td3 mean: -72.973
+*************************************
+Evaluation completed successfully.

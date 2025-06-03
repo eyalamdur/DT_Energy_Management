@@ -20,12 +20,12 @@ def main():
     for model in models:
         agent_type = model.__class__.__name__ if model else "random"
         traj_data = utils.collect_trajectories(env, model=model, num_episodes=10, min_traj_length=20)
-        utils.save_trajectories(traj_data, agent_type)
-        trajectories[agent_type] = traj_data
+        traj_name = utils.save_trajectories(traj_data, agent_type, env, base_dir="logs/trajectories")
+        trajectories[agent_type] = (traj_data, traj_name)
 
     # Create the Decision Transformer models
-    state_dim = trajectories["random"][0]["states"].shape[1]
-    act_dim = trajectories["random"][0]["actions"].shape[1]
+    state_dim = trajectories["random"][0][0]["states"].shape[1]
+    act_dim = trajectories["random"][0][0]["actions"].shape[1]
     rtg_dim = 1
 
     random_dt = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
@@ -39,8 +39,10 @@ def main():
     for agent_type, model in dt_models.items():
         utils.color_print(f"{agent_type.upper()} DT training:", color="yellow")
         trainer = Trainer(model, None, 64)
-        trainer.train(trajectories[agent_type])
-        utils.save_model(model, agent_type)
+        trainer.train(trajectories[agent_type][0], epochs=10)
+        print(trajectories[agent_type][1])
+        utils.save_model(model, agent_type, trajectories[agent_type][1], trainer.loss_fn, trainer.batch_size,
+                         trainer.optimizer, model.embed_dim, model.n_head, model.n_layer, trainer.lr)
 
     utils.color_print("Training completed successfully.", color="green")
 

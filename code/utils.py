@@ -1,5 +1,6 @@
 import os
 import pickle
+from datetime import datetime
 import numpy as np
 import gymnasium as gym
 import torch
@@ -73,6 +74,23 @@ def collect_trajectories(
 
     return trajectories
 
+def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str, env: gym.Env, base_dir: str = "logs/trajectories") -> str:
+    """
+    Save trajectories to logs/trajectories/<agent_type>/traj_#...pkl with full metadata in filename.
+    Args:
+        trajectories (List[Dict[str, np.ndarray]]): List of trajectories to save.
+        agent_type (str): The type of agent (e.g., "random", "PPO", "TD3").
+        env (gym.Env): The environment used for collecting the trajectories.
+        base_dir (str): Base directory to save the trajectories.
+    """
+    file_path = generate_trajectory_filename(base_dir, agent_type, trajectories, env)
+
+    with open(file_path, "wb") as f:
+        pickle.dump(trajectories, f)
+
+    print(f"[✓] Saved {agent_type} trajectories to {file_path}")
+    return file_path
+
 # ----------------------------------------------- Model Utilities ----------------------------------------------- #
 def is_model_available(model_name: str) -> bool:
     """
@@ -85,6 +103,29 @@ def is_model_available(model_name: str) -> bool:
     import os
     return os.path.exists(f"{model_name}.zip") or os.path.exists(model_name)
 
+def save_model(model: torch.nn.Module,
+               agent_type: str,
+               trajectory_path: str,
+               loss_fn_name: str,
+               batch_size: int,
+               optimizer_name: str,
+               embed_dim: int,
+               n_heads: int,
+               n_layers: int,
+               lr: float,
+               base_dir: str = "logs/dt_models") -> None:
+    """
+    Save model with metadata including trajectory run ID from trajectory filename.
+    """
+    file_path = generate_model_filename(base_dir, agent_type, trajectory_path, loss_fn_name,
+                                        batch_size, optimizer_name, embed_dim, n_heads, n_layers, lr)
+
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    torch.save(model.state_dict(), file_path)
+
+    print(f"[✓] Saved {agent_type} model to {file_path}")
+
+# ------------------------------------------------ Path Utilities ----------------------------------------------- #
 def get_next_run_dir(base_dir: str, agent_type: str) -> str:
     """
     Get the next available run directory for a specific agent type.
@@ -103,28 +144,86 @@ def get_next_run_dir(base_dir: str, agent_type: str) -> str:
     os.makedirs(run_dir, exist_ok=True)
     return run_dir
 
-def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str) -> None:
+def generate_trajectory_filename(base_dir: str,
+                                 agent_type: str,
+                                 trajectories: List[Dict[str, np.ndarray]],
+                                 env) -> str:
     """
-    Save trajectories to logs/trajectories/<agent_type>/run(x)/trajectories.pkl
+    Generate full filename path for saving trajectories with embedded metadata.
     Args:
-        trajectories (List[Dict[str, np.ndarray]]): The collected trajectories.
+        base_dir (str): Base directory to save the trajectories.
         agent_type (str): The type of agent (e.g., "random", "PPO", "TD3").
+        trajectories (List[Dict[str, np.ndarray]]): List of trajectories to save.
+        env (gym.Env): The environment used for collecting the trajectories.
+    Returns:
+        str: Full path to the trajectory file.
     """
-    run_dir = get_next_run_dir("logs/trajectories", agent_type)
-    with open(os.path.join(run_dir, "trajectories.pkl"), "wb") as f:
-        pickle.dump(trajectories, f)
-    print(f"[✓] Saved {agent_type} trajectories to {run_dir}")
+    # Ensure directory exists
+    agent_dir = os.path.join(base_dir, agent_type)
+    os.makedirs(agent_dir, exist_ok=True)
 
-def save_model(model: nn.Module, agent_type: str) -> None:
+    # Determine next run ID
+    existing = [f for f in os.listdir(agent_dir) if f.startswith("traj_") and f.endswith(".pkl")]
+    indices = [int(f.split("_")[0].replace("traj_", "")) for f in existing if f.split("_")[0].replace("traj_#", "").isdigit()]
+    run_id = max(indices, default=-1) + 1
+
+    # Extract metadata
+    lengths = [len(traj["states"]) for traj in trajectories]
+    min_len = min(lengths)
+    max_len = max(lengths)
+    num_eps = len(trajectories)
+    env_name = env.spec.id if hasattr(env, "spec") and env.spec else "unknown"
+    date_str = datetime.now().strftime("%Y-%m-%d")
+
+    # Construct filename
+    filename = (
+        f"traj_{run_id}_date:{date_str}_agent:{agent_type}"
+        f"_min:{min_len}_max:{max_len}_episodes:{num_eps}_env:{env_name}.pkl"
+    )
+
+    return os.path.join(agent_dir, filename)
+
+def generate_model_filename(base_dir: str,
+                            agent_type: str,
+                            trajectory_path: str,
+                            loss_fn_name: str,
+                            batch_size: int,
+                            embed_dim: int,
+                            n_heads: int,
+                            n_layers: int,
+                            lr: float,
+                            optimizer_name: str) -> str:
     """
-    Save model to logs/dt_models/<agent_type>/model(x)/model.pt
-    Args:
-        model (nn.Module): The model to save.
-        agent_type (str): The type of agent (e.g., "random", "PPO", "TD3").
+    Generate full model file path with metadata-based filename.
     """
-    run_dir = get_next_run_dir("logs/dt_models", agent_type)
-    torch.save(model.state_dict(), os.path.join(run_dir, "model.pt"))
-    print(f"[✓] Saved {agent_type} DT model to {run_dir}")
+    agent_dir = os.path.join(base_dir, agent_type)
+    os.makedirs(agent_dir, exist_ok=True)
+
+    # Find next model index
+    existing = [f for f in os.listdir(agent_dir) if f.startswith("model:") and f.endswith(".pt")]
+    indices = [int(f.split("_")[0].replace("model:", "")) for f in existing if f.split("_")[0].replace("model:", "").isdigit()]
+    run_id = max(indices, default=-1) + 1
+    date_str = datetime.now().strftime("%Y-%m-%d")
+
+    # Extract traj ID from file name
+    traj_filename = os.path.basename(trajectory_path)
+    try:
+        traj_id = traj_filename.split("_")[0].replace("traj_", "")
+    except Exception:
+        traj_id = "unknown"
+
+    filename = (
+        f"model:{run_id}_{agent_type}_date:{date_str}"
+        f"_traj:{traj_id}_loss-fn:{loss_fn_name}"
+        f"_batch-size:{batch_size}"
+        f"_optimizer:{optimizer_name}"
+        f"_embed-dim:{embed_dim}"
+        f"_n-heads:{n_heads}"
+        f"_n-layers:{n_layers}"
+        f"_lr:{lr}"
+    )
+
+    return os.path.join(agent_dir, filename)
 
 # ----------------------------------------------- Print Utilities ----------------------------------------------- #
 def color_print(text: str, color: str = "blue") -> None:

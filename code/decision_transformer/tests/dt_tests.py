@@ -3,6 +3,7 @@ from decision_transformer.trainer import Trainer
 from models.train_models import get_models
 import utils
 import gym_anm
+import torch
 
 def main():
     # Create the environment
@@ -33,6 +34,16 @@ def main():
     td3_dt = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)   
     utils.color_print("Models created successfully.")
 
+<<<<<<< HEAD
+    dt_model = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
+    print("Model created successfully.")
+    # torch.save(dt_model.state_dict(), "random_decision_transformer.pth")
+
+    # Create the trainer
+    trainer = Trainer(dt_model, None, 64)
+    trainer.train(trajectories)
+    print("works:)")
+=======
     # Create the trainers
     dt_models = {"random": random_dt,"PPO": ppo_dt,"TD3": td3_dt}
     
@@ -43,6 +54,7 @@ def main():
         utils.save_model(model, agent_type)
 
     utils.color_print("Training completed successfully.", color="green")
+>>>>>>> origin/main
 
 if __name__ == "__main__":
     main()

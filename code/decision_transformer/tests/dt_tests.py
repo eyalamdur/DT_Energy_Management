@@ -18,8 +18,10 @@ def main():
     models = get_models(env)
     models.append(None)
     for model in models:
-        trajectories[model.__class__.__name__ if model else "random"] = utils.collect_trajectories(env, model=model, num_episodes=10, min_traj_length=20)
-        print(f"Collected {len(trajectories[model.__class__.__name__ if model else 'random'])} trajectories for {model.__class__.__name__ if model else 'random'}.")
+        agent_type = model.__class__.__name__ if model else "random"
+        traj_data = utils.collect_trajectories(env, model=model, num_episodes=10, min_traj_length=20)
+        utils.save_trajectories(traj_data, agent_type)
+        trajectories[agent_type] = traj_data
 
     # Create the Decision Transformer models
     state_dim = trajectories["random"][0]["states"].shape[1]
@@ -32,15 +34,13 @@ def main():
     utils.color_print("Models created successfully.")
 
     # Create the trainers
-    utils.color_print("Random DT training:", color="yellow")
-    random_trainer = Trainer(random_dt, None, 64)
-    random_trainer.train(trajectories["random"])
-    utils.color_print("PPO DT training:", color="yellow")
-    ppo_trainer = Trainer(ppo_dt, None, 64)
-    ppo_trainer.train(trajectories[models[0].__class__.__name__]) 
-    utils.color_print("TD3 DT training:", color="yellow")
-    td3_trainer = Trainer(td3_dt, None, 64)
-    td3_trainer.train(trajectories[models[1].__class__.__name__])
+    dt_models = {"random": random_dt,"PPO": ppo_dt,"TD3": td3_dt}
+    
+    for agent_type, model in dt_models.items():
+        utils.color_print(f"{agent_type.upper()} DT training:", color="yellow")
+        trainer = Trainer(model, None, 64)
+        trainer.train(trajectories[agent_type])
+        utils.save_model(model, agent_type)
 
     utils.color_print("Training completed successfully.", color="green")
 

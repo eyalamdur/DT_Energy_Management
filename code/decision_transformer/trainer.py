@@ -5,10 +5,10 @@ import time
 
    
 class Trainer:
-    def __init__(self, model, optimizer = None, batch_size = 64, loss_fn = torch.nn.MSELoss(), lr = 1e-4):
-        self.model = model
-        self.lr = lr
-        self.optimizer = optimizer if optimizer is not None else torch.optim.Adam(model.parameters(), lr=lr)
+    def __init__(self, model, optimizer = None, batch_size = 64, loss_fn = torch.nn.MSELoss(), device=None):
+        self.device = device or torch.device("cpu")
+        self.model = model.to(self.device)
+        self.optimizer = optimizer if optimizer is not None else torch.optim.AdamW(model.parameters(), lr=1e-4)
         self.loss_fn = loss_fn
         self.batch_size = batch_size
         self.start_time = time.time()
@@ -66,11 +66,11 @@ class Trainer:
             mask_batch[i, :actual_seq_len] = 1
 
         return (
-            torch.tensor(state_batch, dtype=torch.float32),
-            torch.tensor(act_batch, dtype=torch.float32),
-            torch.tensor(rtg_batch, dtype=torch.float32),
-            torch.tensor(timestep_batch, dtype=torch.long),
-            torch.tensor(mask_batch, dtype=torch.long)  # return the mask too
+        torch.tensor(state_batch, dtype=torch.float32, device=self.device),
+        torch.tensor(act_batch, dtype=torch.float32, device=self.device),
+        torch.tensor(rtg_batch, dtype=torch.float32, device=self.device),
+        torch.tensor(timestep_batch, dtype=torch.long, device=self.device),
+        torch.tensor(mask_batch, dtype=torch.long, device=self.device)
         )
         
     def train_step(self, states, actions, rtgs, timesteps, mask):
@@ -86,6 +86,14 @@ class Trainer:
             loss (float): The loss value after the training step.
         """
         
+        # Move tensors to the appropriate device
+        states = states.to(self.device)
+        actions = actions.to(self.device)
+        rtgs = rtgs.to(self.device)
+        timesteps = timesteps.to(self.device)
+        mask = mask.to(self.device)
+
+        # Clone actions to avoid modifying the original tensor
         action_target = torch.clone(actions)
 
         # Call forward pass
@@ -104,13 +112,13 @@ class Trainer:
 
         return loss.item()
     
-    def train(self, trajectories: list, epochs: int = 1001):
+    def train(self, trajectories: list, epochs: int = 1001, min_traj_length: int = 20, max_traj_length: int = 100):
         """
         Train the model for a specified number of epochs.
         Args:
             epochs (int): The number of epochs to train for.
         """
-        states, actions, rtgs, timesteps, mask = self.get_batch(trajectories)
+        states, actions, rtgs, timesteps, mask = self.get_batch(trajectories, min_traj_length, max_traj_length)
         for epoch in range(epochs):
             loss = self.train_step(states, actions, rtgs, timesteps, mask)
             if epoch % 100 == 0:

@@ -74,9 +74,9 @@ def collect_trajectories(
 
     return trajectories
 
-def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str, env: gym.Env, base_dir: str = "logs/trajectories") -> str:
+def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str, env: gym.Env, base_dir: str = "results/trajectories") -> str:
     """
-    Save trajectories to logs/trajectories/<agent_type>/traj_#...pkl with full metadata in filename.
+    Save trajectories to results/trajectories/<agent_type>/traj_#...pkl with full metadata in filename.
     Args:
         trajectories (List[Dict[str, np.ndarray]]): List of trajectories to save.
         agent_type (str): The type of agent (e.g., "random", "PPO", "TD3").
@@ -113,7 +113,7 @@ def save_model(model: torch.nn.Module,
                n_heads: int,
                n_layers: int,
                lr: float,
-               base_dir: str = "logs/dt_models") -> None:
+               base_dir: str = "results/dt_models") -> None:
     """
     Save model with metadata including trajectory run ID from trajectory filename.
     """
@@ -126,23 +126,28 @@ def save_model(model: torch.nn.Module,
     print(f"[✓] Saved {agent_type} model to {file_path}")
 
 # ------------------------------------------------ Path Utilities ----------------------------------------------- #
-def get_next_run_dir(base_dir: str, agent_type: str) -> str:
+def get_next_run_id(agent_dir: str, folder: str) -> int:
     """
-    Get the next available run directory for a specific agent type.
+    Get the next run ID based on existing files in the specified folder.
+    This function scans the specified folder for files that match the expected naming convention
+    and extracts the run IDs to determine the next available ID.
     Args:
-        base_dir (str): The base directory for the agent type.
-        agent_type (str): The agent type (e.g., "random", "PPO", "TD3").
+        agent_dir (str): The directory of the agent.
+        folder (str): The folder to scan for existing files.
+    Raises:
+        ValueError: If the folder type is unknown.
     Returns:
-        str: The path to the next available run directory.
+        int: The next available run ID.
     """
-    agent_dir = os.path.join(base_dir, agent_type)
-    os.makedirs(agent_dir, exist_ok=True)
-    existing_runs = [d for d in os.listdir(agent_dir) if os.path.isdir(os.path.join(agent_dir, d)) and d.startswith('run')]
-    indices = [int(d[4:]) for d in existing_runs if d[4:].isdigit()]
-    next_index = max(indices) + 1 if indices else 0
-    run_dir = os.path.join(agent_dir, f'run_{next_index}')
-    os.makedirs(run_dir, exist_ok=True)
-    return run_dir
+    # Determine next run ID
+    if folder == "trajectories":
+        existing = [f for f in os.listdir(agent_dir) if f.startswith("traj_") and f.endswith(".pkl")]
+    elif folder == "dt_models":
+        existing = [f for f in os.listdir(agent_dir) if f.startswith("model_")]
+    else:
+        raise ValueError(f"Unknown folder type: {folder}")
+    indices = [int(f.split("_")[1]) for f in existing if f.split("_")[1].isdigit()]
+    return max(indices, default=-1) + 1
 
 def generate_trajectory_filename(base_dir: str,
                                  agent_type: str,
@@ -162,10 +167,8 @@ def generate_trajectory_filename(base_dir: str,
     agent_dir = os.path.join(base_dir, agent_type)
     os.makedirs(agent_dir, exist_ok=True)
 
-    # Determine next run ID
-    existing = [f for f in os.listdir(agent_dir) if f.startswith("traj_") and f.endswith(".pkl")]
-    indices = [int(f.split("_")[0].replace("traj_", "")) for f in existing if f.split("_")[0].replace("traj_#", "").isdigit()]
-    run_id = max(indices, default=-1) + 1
+    # Find next run ID
+    run_id = get_next_run_id(agent_dir, "trajectories")
 
     # Extract metadata
     lengths = [len(traj["states"]) for traj in trajectories]
@@ -188,32 +191,31 @@ def generate_model_filename(base_dir: str,
                             trajectory_path: str,
                             loss_fn_name: str,
                             batch_size: int,
+                            optimizer_name: str,
                             embed_dim: int,
                             n_heads: int,
                             n_layers: int,
-                            lr: float,
-                            optimizer_name: str) -> str:
+                            lr: float
+                            ) -> str:
     """
     Generate full model file path with metadata-based filename.
     """
     agent_dir = os.path.join(base_dir, agent_type)
     os.makedirs(agent_dir, exist_ok=True)
 
-    # Find next model index
-    existing = [f for f in os.listdir(agent_dir) if f.startswith("model:") and f.endswith(".pt")]
-    indices = [int(f.split("_")[0].replace("model:", "")) for f in existing if f.split("_")[0].replace("model:", "").isdigit()]
-    run_id = max(indices, default=-1) + 1
+    # Find next run ID
+    run_id = get_next_run_id(agent_dir, "dt_models")
     date_str = datetime.now().strftime("%Y-%m-%d")
 
     # Extract traj ID from file name
     traj_filename = os.path.basename(trajectory_path)
     try:
-        traj_id = traj_filename.split("_")[0].replace("traj_", "")
+        traj_id = traj_filename.split("_")[1]
     except Exception:
         traj_id = "unknown"
 
     filename = (
-        f"model:{run_id}_{agent_type}_date:{date_str}"
+        f"model_{run_id}_{agent_type}_date:{date_str}"
         f"_traj:{traj_id}_loss-fn:{loss_fn_name}"
         f"_batch-size:{batch_size}"
         f"_optimizer:{optimizer_name}"

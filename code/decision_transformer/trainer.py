@@ -5,9 +5,10 @@ import time
 
    
 class Trainer:
-    def __init__(self, model, optimizer = None, batch_size = 64, loss_fn = torch.nn.MSELoss()):
+    def __init__(self, model, optimizer = None, batch_size = 64, loss_fn = torch.nn.MSELoss(), lr = 1e-4):
         self.model = model
-        self.optimizer = optimizer if optimizer is not None else torch.optim.Adam(model.parameters(), lr=1e-4)
+        self.lr = lr
+        self.optimizer = optimizer if optimizer is not None else torch.optim.Adam(model.parameters(), lr=lr)
         self.loss_fn = loss_fn
         self.batch_size = batch_size
         self.start_time = time.time()

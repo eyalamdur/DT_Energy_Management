@@ -8,7 +8,6 @@ import torch
 import gymnasium as gym
 import os
 
-
 def evaluate_models(stats_file, date, env: gym.Env, dt_model_names, dt_models, rl_model_names, rl_models, num_episodes: int = 10,
                     max_episode_length: int = 1000):
     os.makedirs(f"code/evaluate/stats/{date}/DT", exist_ok=True)
@@ -67,7 +66,6 @@ def main():
             ppo_model = ppo.train_ppo(env)
         rl_models["ppo"] = ppo_model
         evaluate_file.write("PPO model loaded successfully.\n")
-
         if utils.is_model_available("code/models/td3/td3_anm6easy"):
             td3_model = td3.load_td3("code/models/td3/td3_anm6easy")
         else:

@@ -3,6 +3,7 @@ from decision_transformer.trainer import Trainer
 from models.train_models import get_models
 import utils
 import gym_anm
+import torch
 
 def get_dimensions(trajectories : list) -> tuple:
     """
@@ -27,6 +28,7 @@ def generate_trajectories(env):
         traj_name = utils.save_trajectories(traj_data, agent_type, env)
         trajectories[agent_type] = (traj_data, traj_name)
     return trajectories
+
 
 def train_dt_models(trajectories, dt_models):
     """

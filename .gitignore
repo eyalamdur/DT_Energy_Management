@@ -10,3 +10,6 @@ code/models/*.zip
 # Ignore Python cache files
 **/__pycache__/
 code/decision_transformer.egg-info/*
+
+# Ignore trajectories files
+**/*.pkl

@@ -67,7 +67,7 @@ def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, 
 
 def main():
     # Get parameters from the command line
-    num_episodes = 5000
+    num_episodes = 2000
     training_epochs = 10000
     min_traj_length = 96            # 1 day in ANM6Easy-v0
     max_traj_length = 960           # 10 days in ANM6Easy-v0

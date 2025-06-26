@@ -2,6 +2,7 @@ import gymnasium as gym
 import numpy as np
 import torch
 import time
+from tqdm import trange
 
    
 class Trainer:
@@ -119,7 +120,7 @@ class Trainer:
             epochs (int): The number of epochs to train for.
         """
         states, actions, rtgs, timesteps, mask = self.get_batch(trajectories, min_traj_length, max_traj_length)
-        for epoch in range(epochs):
+        for epoch in trange(epochs, desc="DT Training"):
             loss = self.train_step(states, actions, rtgs, timesteps, mask)
             if epoch % 100 == 0:
                 print(f"Epoch: {epoch} - Loss: {loss:.4f}")

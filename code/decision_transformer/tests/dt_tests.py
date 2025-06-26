@@ -1,6 +1,7 @@
 from decision_transformer.decision_transformer import DecisionTransformer
 from decision_transformer.trainer import Trainer
 from models.train_models import get_models
+from tqdm import tqdm
 import utils
 import torch
 import gym_anm
@@ -37,8 +38,9 @@ def generate_trajectories(env, num_episodes, min_traj_length, max_traj_length):
     for model in models:
         agent_type = model.__class__.__name__ if model else "random"
         traj_data = utils.collect_trajectories(env, model=model, num_episodes=num_episodes, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
-        traj_id = utils.save_trajectories(traj_data, agent_type, env) if traj_data else None
+        traj_id = int(utils.save_trajectories(traj_data, agent_type, env).split("_")[1]) if traj_data else None
         trajectories += traj_data
+        
     return (trajectories, traj_id)
 
 def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, min_traj_length, max_traj_length):
@@ -49,7 +51,6 @@ def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, 
         dt_models (dict): Dictionary of Decision Transformer models.
     """
     # Create the trainer
-    utils.color_print(f"DT training:", color="yellow")
     trainer = Trainer(dt_model, None, batch_size, loss_fn=loss_fn, device=device)
     trainer.train(trajectories[0], epochs=epochs, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
     utils.save_model(
@@ -66,14 +67,14 @@ def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, 
 
 def main():
     # Get parameters from the command line
-    num_episodes = 100
-    training_epochs = 100
-    min_traj_length = 50
-    max_traj_length = 100
-    batch_size = 256
-    embed_dim = 256
-    num_layers = 6
-    num_heads = 8
+    num_episodes = 5000
+    training_epochs = 10000
+    min_traj_length = 96            # 1 day in ANM6Easy-v0
+    max_traj_length = 960           # 10 days in ANM6Easy-v0
+    batch_size = 256                # Batch size for training
+    embed_dim = 256                 # Embedding dimension for the Decision Transformer
+    num_layers = 6                  # Number of layers in the Decision Transformer
+    num_heads = 8                   # Number of attention heads in the Decision Transformer
     loss_fn = torch.nn.MSELoss()
     
     # Set the device for PyTorch

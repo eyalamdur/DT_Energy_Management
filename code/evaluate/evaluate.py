@@ -51,7 +51,7 @@ def main():
         dt_models = {}
         for model_name in dt_model_names:
             dt_model = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
-            model_src = f"logs/dt_models/{model_name}/run_0/model.pt"
+            model_src = f"results/dt_models/{model_name}/model.pt"
             dt_model.load_state_dict(torch.load(model_src))
             dt_models[model_name] = dt_model
 
@@ -60,16 +60,11 @@ def main():
         rl_model_names = ["ppo", "td3"]
         rl_models = {}
 
-        if utils.is_model_available("code/models/ppo/ppo_anm6easy"):
-            ppo_model = ppo.load_ppo("code/models/ppo/ppo_anm6easy")
-        else:
-            ppo_model = ppo.train_ppo(env)
+        ppo_model = ppo.load_ppo("code/models/ppo/ppo_anm6easy") if utils.is_model_available("code/models/ppo/ppo_anm6easy") else ppo.train_ppo(env)
         rl_models["ppo"] = ppo_model
         evaluate_file.write("PPO model loaded successfully.\n")
-        if utils.is_model_available("code/models/td3/td3_anm6easy"):
-            td3_model = td3.load_td3("code/models/td3/td3_anm6easy")
-        else:
-            td3_model = td3.train_td3(env)
+        
+        td3_model = td3.load_td3("code/models/td3/td3_anm6easy") if utils.is_model_available("code/models/td3/td3_anm6easy") else td3.train_td3(env)
         rl_models["td3"] = td3_model
         evaluate_file.write("TD3 model loaded successfully.\n")
 

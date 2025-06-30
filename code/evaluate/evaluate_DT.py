@@ -64,5 +64,3 @@ def episode_evaluation_DT (stats_file, env: gym.Env, model, max_episode_length =
 
     return cumulative_reword / steps
 
-
-

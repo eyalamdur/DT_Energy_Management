@@ -17,4 +17,3 @@ Unlike traditional RL that learns value functions or policy networks via increme
 •	Return-conditioning flexibility: By conditioning on different target returns, the same model can generate policies for different objectives (e.g. aiming for higher efficiency vs. lower cost) or adapt its aggressiveness. This conditional policy aspect may help in generalizing to scenarios with varying goals or constraints.
 
 •	Comparative robustness: Recent studies indicate that while DT may require more data to train than some specialized offline RL algorithms, it tends to be more robust to issues like sparse rewards and suboptimal data. This robustness is valuable in power systems, where reward signals can be sparse (e.g. only penalizing rare failures) and data might come from imperfect heuristics.
-

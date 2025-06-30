@@ -2,6 +2,7 @@ from decision_transformer.decision_transformer import DecisionTransformer
 from decision_transformer.trainer import Trainer
 from models.train_models import get_models
 import utils
+import torch
 import gym_anm
 import torch
 
@@ -18,64 +19,82 @@ def get_dimensions(trajectories : list) -> tuple:
     rtg_dim = 1  # Assuming return-to-go is a scalar
     return state_dim, act_dim, rtg_dim
 
-def generate_trajectories(env):
-    trajectories = {}
+def generate_trajectories(env, num_episodes, min_traj_length, max_traj_length):
+    """
+    Generate trajectories for different agent types in the environment.
+    Args:
+        env (gym.Env): The environment to collect trajectories from.
+        num_episodes (int): Number of episodes to collect for each agent type.
+        min_traj_length (int): Minimum trajectory length.
+        max_traj_length (int): Maximum trajectory length.
+    Returns:
+        List[Dict[str, np.ndarray]]: List of trajectories of all the agents concatenated.
+        str: The ID of the saved trajectories.
+    """
+    trajectories = []
     models = get_models(env)
     models.append(None)
     for model in models:
         agent_type = model.__class__.__name__ if model else "random"
-        traj_data = utils.collect_trajectories(env, model=model, num_episodes=10, min_traj_length=20)
-        traj_name = utils.save_trajectories(traj_data, agent_type, env)
-        trajectories[agent_type] = (traj_data, traj_name)
-    return trajectories
+        traj_data = utils.collect_trajectories(env, model=model, num_episodes=num_episodes, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
+        traj_id = utils.save_trajectories(traj_data, agent_type, env) if traj_data else None
+        trajectories += traj_data
+    return (trajectories, traj_id)
 
-
-def train_dt_models(trajectories, dt_models):
+def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, min_traj_length, max_traj_length):
     """
     Train Decision Transformer models.
     Args:
         trajectories (dict): Dictionary of trajectories for each agent type.
         dt_models (dict): Dictionary of Decision Transformer models.
     """
-    # Create the trainers
-    for agent_type, model in dt_models.items():
-        utils.color_print(f"{agent_type.upper()} DT training:", color="yellow")
-        trainer = Trainer(model, None, 64)
-        trainer.train(trajectories[agent_type][0], epochs=10)
-        print(trajectories[agent_type][1])
-        utils.save_model(
-            model=model,
-            agent_type=agent_type,
-            trajectory_path=trajectories[agent_type][1],
-            loss_fn_name=trainer.loss_fn.__class__.__name__,
-            batch_size=trainer.batch_size,
-            optimizer_name=trainer.optimizer.__class__.__name__,
-            embed_dim=model.embed_dim,
-            n_heads=model.n_head,
-            n_layers=model.n_layer,
-            lr=trainer.optimizer.param_groups[0]['lr']
+    # Create the trainer
+    utils.color_print(f"DT training:", color="yellow")
+    trainer = Trainer(dt_model, None, batch_size, loss_fn=loss_fn, device=device)
+    trainer.train(trajectories[0], epochs=epochs, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
+    utils.save_model(
+        model=dt_model,
+        trajectory_id=trajectories[1],
+        loss_fn_name=trainer.loss_fn.__class__.__name__,
+        batch_size=trainer.batch_size,
+        optimizer_name=trainer.optimizer.__class__.__name__,
+        embed_dim=dt_model.embed_dim,
+        n_heads=dt_model.n_head,
+        n_layers=dt_model.n_layer,
+        lr=trainer.optimizer.param_groups[0]['lr']
         )
 
 def main():
+    # Get parameters from the command line
+    num_episodes = 100
+    training_epochs = 100
+    min_traj_length = 50
+    max_traj_length = 100
+    batch_size = 256
+    embed_dim = 256
+    num_layers = 6
+    num_heads = 8
+    loss_fn = torch.nn.MSELoss()
+    
+    # Set the device for PyTorch
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     # Create the environment
     env = utils.create_environment(env_name='ANM6Easy-v0', entry_point='gym_anm.envs.anm6_env.anm6_easy:ANM6Easy')
     utils.color_print("Environment created successfully.")  
     
     # Collect trajectories & get dimensions and The environment's action boundaries
     utils.color_print(f"Collecting trajectories...")
-    trajectories = generate_trajectories(env)
-    state_dim, act_dim, rtg_dim = get_dimensions(trajectories["random"][0])
+    trajectories = generate_trajectories(env, num_episodes, min_traj_length, max_traj_length)
+    state_dim, act_dim, rtg_dim = get_dimensions(trajectories[0])
     boundaries = env.action_space.low, env.action_space.high 
     
     # Create the Decision Transformer models
-    random_dt = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
-    ppo_dt = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
-    td3_dt = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
-    dt_models = {"random": random_dt, "PPO": ppo_dt, "TD3": td3_dt}
+    dt = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim, embed_dim=embed_dim, n_layer=num_layers, n_head=num_heads, max_episode_len=max_traj_length).to(device)
     utils.color_print("Models created successfully.")
     
     # Train the Decision Transformer models
-    train_dt_models(trajectories, dt_models)
+    train_dt_model(trajectories, dt, batch_size=batch_size, loss_fn=loss_fn, epochs=training_epochs, device=device, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
     utils.color_print("Training completed successfully.", color="green")
 
 if __name__ == "__main__":

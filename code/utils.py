@@ -47,7 +47,7 @@ def collect_trajectories(
     """
     trajectories = []
 
-    for _ in range(num_episodes):
+    for episode in range(1, num_episodes + 1):
         obs, _ = env.reset()
         states, actions, rewards = [], [], []
 
@@ -71,6 +71,9 @@ def collect_trajectories(
                 "actions": np.array(actions),
                 "rtgs": rtgs
             })
+        
+        if episode % 10 == 0:
+            print(f"Collected {episode}/{num_episodes} episodes")
 
     return trajectories
 
@@ -124,6 +127,39 @@ def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str
     print(f"[✓] Saved {agent_type} trajectories to {file_path}")
     return file_path
 
+
+def print_stats(stats_file, step, state, action, reward, done):
+    lines = []
+
+    lines.append(f"     step: {step}")
+
+    # Device labels for paired P and Q in state
+    device_labels = ["Slack", "Load1", "PV", "Load2", "Wind", "EV", "Storage"]
+
+    lines.append("         state:")
+    for i, label in enumerate(device_labels):
+        p = state[i]
+        q = state[i + 7]
+        lines.append(f"             {label:<8} P: {p:>7.3f}   Q: {q:>7.3f}")
+
+    # Additional state values
+    lines.append(f"             Storage SoC     : {state[14]:7.3f}")
+    lines.append(f"             PV Max          : {state[15]:7.3f}")
+    lines.append(f"             Wind Max        : {state[16]:7.3f}")
+    lines.append(f"             Time Index      : {int(state[17])}")
+
+    # Actions
+    lines.append("         action:")
+    lines.append(f"             Slack setpoint     P: {action[0]:7.3f}   Q: {action[1]:7.3f}")
+    lines.append(f"             Storage dispatch   P: {action[2]:7.3f}   Q: {action[3]:7.3f}")
+    lines.append(f"             PV curtailment     P: {action[4]:7.3f}")
+    lines.append(f"             Wind curtailment   P: {action[5]:7.3f}")
+
+    lines.append(f"         reward: {reward:.3f}")
+    lines.append(f"         done  : {done}")
+
+    # Write all lines to the file
+    stats_file.write("\n".join(lines) + "\n")
 # ----------------------------------------------- Model Utilities ----------------------------------------------- #
 def is_model_available(model_name: str) -> bool:
     """
@@ -137,8 +173,7 @@ def is_model_available(model_name: str) -> bool:
     return os.path.exists(f"{model_name}.zip") or os.path.exists(model_name)
 
 def save_model(model: torch.nn.Module,
-               agent_type: str,
-               trajectory_path: str,
+               trajectory_id: str,
                loss_fn_name: str,
                batch_size: int,
                optimizer_name: str,
@@ -146,17 +181,17 @@ def save_model(model: torch.nn.Module,
                n_heads: int,
                n_layers: int,
                lr: float,
-               base_dir: str = "results/dt_models") -> None:
+               base_dir: str = "results/models/DT") -> None:
     """
     Save model with metadata including trajectory run ID from trajectory filename.
     """
-    file_path = generate_model_filename(base_dir, agent_type, trajectory_path, loss_fn_name,
+    file_path = generate_model_filename(base_dir, trajectory_id, loss_fn_name,
                                         batch_size, optimizer_name, embed_dim, n_heads, n_layers, lr)
 
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     torch.save(model.state_dict(), file_path)
 
-    print(f"[✓] Saved {agent_type} model to {file_path}")
+    print(f"[✓] Saved DT model to {file_path}")
 
 # ------------------------------------------------ Path Utilities ----------------------------------------------- #
 def get_next_run_id(agent_dir: str, folder: str) -> int:
@@ -175,7 +210,7 @@ def get_next_run_id(agent_dir: str, folder: str) -> int:
     # Determine next run ID
     if folder == "trajectories":
         existing = [f for f in os.listdir(agent_dir) if f.startswith("traj_") and f.endswith(".pkl")]
-    elif folder == "dt_models":
+    elif folder == "models":
         existing = [f for f in os.listdir(agent_dir) if f.startswith("model_")]
     else:
         raise ValueError(f"Unknown folder type: {folder}")
@@ -220,8 +255,7 @@ def generate_trajectory_filename(base_dir: str,
     return os.path.join(agent_dir, filename)
 
 def generate_model_filename(base_dir: str,
-                            agent_type: str,
-                            trajectory_path: str,
+                            trajectory_id: str,
                             loss_fn_name: str,
                             batch_size: int,
                             optimizer_name: str,
@@ -233,23 +267,17 @@ def generate_model_filename(base_dir: str,
     """
     Generate full model file path with metadata-based filename.
     """
-    agent_dir = os.path.join(base_dir, agent_type)
-    os.makedirs(agent_dir, exist_ok=True)
 
+    # Ensure directory exists
+    os.makedirs(base_dir, exist_ok=True)
+    
     # Find next run ID
-    run_id = get_next_run_id(agent_dir, "dt_models")
+    run_id = get_next_run_id(base_dir, "models")
     date_str = datetime.now().strftime("%Y-%m-%d")
 
-    # Extract traj ID from file name
-    traj_filename = os.path.basename(trajectory_path)
-    try:
-        traj_id = traj_filename.split("_")[1]
-    except Exception:
-        traj_id = "unknown"
-
     filename = (
-        f"model_{run_id}_{agent_type}_date:{date_str}"
-        f"_traj:{traj_id}_loss-fn:{loss_fn_name}"
+        f"model_{run_id}_date:{date_str}"
+        f"_traj:{trajectory_id}_loss-fn:{loss_fn_name}"
         f"_batch-size:{batch_size}"
         f"_optimizer:{optimizer_name}"
         f"_embed-dim:{embed_dim}"
@@ -258,7 +286,7 @@ def generate_model_filename(base_dir: str,
         f"_lr:{lr}"
     )
 
-    return os.path.join(agent_dir, filename)
+    return os.path.join(base_dir, filename)
 
 # ----------------------------------------------- Print Utilities ----------------------------------------------- #
 def color_print(text: str, color: str = "blue") -> None:

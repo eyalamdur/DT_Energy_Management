@@ -5,6 +5,7 @@ import numpy as np
 import gymnasium as gym
 import torch
 import torch.nn as nn
+from tqdm import trange
 from typing import List, Dict, Optional
 from stable_baselines3.common.base_class import BaseAlgorithm  # parent of PPO, TD3, etc.
 
@@ -46,8 +47,9 @@ def collect_trajectories(
         List[Dict]: Each dict contains 'states', 'actions', 'rtgs' for one episode.
     """
     trajectories = []
+    model_name = type(model).__name__ if model is not None else "Random"
 
-    for episode in range(1, num_episodes + 1):
+    for episode in trange(1, num_episodes + 1, desc=f"Collecting trajectories from agent {model_name}"):
         obs, _ = env.reset()
         states, actions, rewards = [], [], []
 
@@ -71,9 +73,6 @@ def collect_trajectories(
                 "actions": np.array(actions),
                 "rtgs": rtgs
             })
-        
-        if episode % 10 == 0:
-            print(f"Collected {episode}/{num_episodes} episodes")
 
     return trajectories
 
@@ -127,7 +126,6 @@ def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str
     print(f"[✓] Saved {agent_type} trajectories to {file_path}")
     return file_path
 
-
 def print_stats(stats_file, step, state, action, reward, done):
     lines = []
 
@@ -160,6 +158,7 @@ def print_stats(stats_file, step, state, action, reward, done):
 
     # Write all lines to the file
     stats_file.write("\n".join(lines) + "\n")
+
 # ----------------------------------------------- Model Utilities ----------------------------------------------- #
 def is_model_available(model_name: str) -> bool:
     """

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dt-project"
+version = "0.1.0"
+description = "Decision Transformer project for energy management"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+  "gym_anm==2.0.1",
+  "gymnasium>=1.0.0",
+  "numpy>=2.2.6",
+  "stable_baselines3>=2.6.0",
+  "torch>=2.7.1",
+  "tqdm>=4.67.1",
+  "transformers>=4.53.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*"]

@@ -43,6 +43,24 @@ def generate_trajectories(env, num_episodes, min_traj_length, max_traj_length):
         
     return (trajectories, traj_id)
 
+def load_trajectories(env, traj_id):
+    """
+    Load trajectories for ppo, random, and td3 agent types using the given traj_id.
+    Args:
+        env (gym.Env): The environment instance (for path resolution).
+        traj_id (int or str): The trajectory ID to load.
+    Returns:
+        List[Dict[str, np.ndarray]]: List of trajectories of all the agents concatenated.
+        str: The ID of the loaded trajectories.
+    """
+    agent_types = ["PPO", "random", "TD3"]
+    all_trajectories = []
+    for agent_type in agent_types:
+        traj_data = utils.load_trajectories(agent_type, traj_id)
+        if traj_data:
+            all_trajectories += traj_data
+    return (all_trajectories, traj_id)
+
 def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, min_traj_length, max_traj_length):
     """
     Train Decision Transformer models.
@@ -66,11 +84,15 @@ def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, 
         )
 
 def main():
-    # Get parameters from the command line
-    num_episodes = 2000
-    training_epochs = 10000
+    # Trajectory parameters
+    num_episodes = 2000             # Number of episodes to collect for each agent type
+    load = True                     # Load existing trajectories if available
+    traj_id = 3                     # ID of the trajectory to load or save
     min_traj_length = 96            # 1 day in ANM6Easy-v0
-    max_traj_length = 960           # 10 days in ANM6Easy-v0
+    max_traj_length = 480           # 5 days in ANM6Easy-v0
+    
+    # Model parameters
+    training_epochs = 10000
     batch_size = 256                # Batch size for training
     embed_dim = 256                 # Embedding dimension for the Decision Transformer
     num_layers = 6                  # Number of layers in the Decision Transformer
@@ -86,12 +108,13 @@ def main():
     
     # Collect trajectories & get dimensions and The environment's action boundaries
     utils.color_print(f"Collecting trajectories...")
-    trajectories = generate_trajectories(env, num_episodes, min_traj_length, max_traj_length)
+    trajectories = load_trajectories(env, traj_id=traj_id) if load else generate_trajectories(env, num_episodes, min_traj_length, max_traj_length)
     state_dim, act_dim, rtg_dim = get_dimensions(trajectories[0])
     boundaries = env.action_space.low, env.action_space.high 
     
     # Create the Decision Transformer models
     dt = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim, embed_dim=embed_dim, n_layer=num_layers, n_head=num_heads, max_episode_len=max_traj_length).to(device)
+    dt.transformer.gradient_checkpointing_enable()      # Enable gradient checkpointing for memory efficiency
     utils.color_print("Models created successfully.")
     
     # Train the Decision Transformer models

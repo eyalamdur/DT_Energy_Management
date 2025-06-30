@@ -76,6 +76,27 @@ def collect_trajectories(
 
     return trajectories
 
+def load_trajectories(agent_type: str, traj_id: int, base_dir: str = "results/trajectories"):
+    """
+    Load trajectories for a given agent type and trajectory ID.
+    Args:
+        agent_type (str): The type of agent (e.g., "random", "ppo", "td3").
+        traj_id (int or str): The trajectory ID to load.
+        base_dir (str): Base directory where trajectories are stored.
+    Returns:
+        List[Dict[str, np.ndarray]]: List of trajectories, or None if not found.
+    """
+    agent_dir = os.path.join(base_dir, agent_type)
+    if not os.path.exists(agent_dir):
+        return None
+    # Find the file with the correct traj_id
+    for fname in os.listdir(agent_dir):
+        if fname.startswith(f"traj_{traj_id}_") and fname.endswith(".pkl"):
+            file_path = os.path.join(agent_dir, fname)
+            with open(file_path, "rb") as f:
+                return pickle.load(f)
+    return None
+
 def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str, env: gym.Env, base_dir: str = "results/trajectories") -> str:
     """
     Save trajectories to results/trajectories/<agent_type>/traj_#...pkl with full metadata in filename.
@@ -270,4 +291,5 @@ def color_print(text: str, color: str = "blue") -> None:
         "reset": "\033[0m"
     }
     print(f"{colors.get(color, colors['blue'])}{text}{colors['reset']}")
-    
+
+

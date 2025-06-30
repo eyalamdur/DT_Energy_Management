@@ -76,38 +76,26 @@ def collect_trajectories(
 
     return trajectories
 
-def print_stats(stats_file, step, state, action, reward, done):
-    lines = []
-
-    lines.append(f"     step: {step}")
-
-    # Device labels for paired P and Q in state
-    device_labels = ["Slack", "Load1", "PV", "Load2", "Wind", "EV", "Storage"]
-
-    lines.append("         state:")
-    for i, label in enumerate(device_labels):
-        p = state[i]
-        q = state[i + 7]
-        lines.append(f"             {label:<8} P: {p:>7.3f}   Q: {q:>7.3f}")
-
-    # Additional state values
-    lines.append(f"             Storage SoC     : {state[14]:7.3f}")
-    lines.append(f"             PV Max          : {state[15]:7.3f}")
-    lines.append(f"             Wind Max        : {state[16]:7.3f}")
-    lines.append(f"             Time Index      : {int(state[17])}")
-
-    # Actions
-    lines.append("         action:")
-    lines.append(f"             Slack setpoint     P: {action[0]:7.3f}   Q: {action[1]:7.3f}")
-    lines.append(f"             Storage dispatch   P: {action[2]:7.3f}   Q: {action[3]:7.3f}")
-    lines.append(f"             PV curtailment     P: {action[4]:7.3f}")
-    lines.append(f"             Wind curtailment   P: {action[5]:7.3f}")
-
-    lines.append(f"         reward: {reward:.3f}")
-    lines.append(f"         done  : {done}")
-
-    # Write all lines to the file
-    stats_file.write("\n".join(lines) + "\n")
+def load_trajectories(agent_type: str, traj_id: int, base_dir: str = "results/trajectories"):
+    """
+    Load trajectories for a given agent type and trajectory ID.
+    Args:
+        agent_type (str): The type of agent (e.g., "random", "ppo", "td3").
+        traj_id (int or str): The trajectory ID to load.
+        base_dir (str): Base directory where trajectories are stored.
+    Returns:
+        List[Dict[str, np.ndarray]]: List of trajectories, or None if not found.
+    """
+    agent_dir = os.path.join(base_dir, agent_type)
+    if not os.path.exists(agent_dir):
+        return None
+    # Find the file with the correct traj_id
+    for fname in os.listdir(agent_dir):
+        if fname.startswith(f"traj_{traj_id}_") and fname.endswith(".pkl"):
+            file_path = os.path.join(agent_dir, fname)
+            with open(file_path, "rb") as f:
+                return pickle.load(f)
+    return None
 
 def save_trajectories(trajectories: List[Dict[str, np.ndarray]], agent_type: str, env: gym.Env, base_dir: str = "results/trajectories") -> str:
     """
@@ -303,4 +291,5 @@ def color_print(text: str, color: str = "blue") -> None:
         "reset": "\033[0m"
     }
     print(f"{colors.get(color, colors['blue'])}{text}{colors['reset']}")
-    
+
+

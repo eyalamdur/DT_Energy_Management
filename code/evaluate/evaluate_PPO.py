@@ -1,4 +1,4 @@
-import code.models.ppo.train_ppo as ppo
+import models.ppo.train_ppo as ppo
 import gymnasium as gym
 import numpy as np
 import utils

@@ -1,12 +1,12 @@
 # Ignore VSCode settings
 .vscode/
 
-# Ignore environment files
-.venv_ai_project/
+# Ignore environment files & python version
+.python-version
 
 # Ignore Python cache files
 **/__pycache__/
-code/decision_transformer.egg-info/*
+src/dt_project.egg-info/*
 
 # Ignore models implementation files
 **/models/**/*.zip

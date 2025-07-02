@@ -95,23 +95,42 @@ class Trainer:
         mask = mask.to(self.device)
 
         # Clone actions to avoid modifying the original tensor
-        action_target = torch.clone(actions)
+        state_target, action_target, rtgs_target = torch.clone(states), torch.clone(actions), torch.clone(rtgs)
 
         # Call forward pass
-        _, action_preds, _ = self.model.forward(states, actions, rtgs, timesteps, mask)
+        state_preds, action_preds, rtgs_preds = self.model.forward(states, actions, rtgs, timesteps, mask)
 
+        # Normalize the action predictions
         act_dim = action_preds.shape[2]
         action_preds = action_preds.reshape(-1, act_dim)[mask.reshape(-1) > 0]
         action_target = action_target.reshape(-1, act_dim)[mask.reshape(-1) > 0]
+        action_loss = self.loss_fn(action_preds, action_target)
+        
+        # Normalize the state predictions
+        state_dim = state_preds.shape[2]
+        state_preds = state_preds.reshape(-1, state_dim)[mask.reshape(-1) > 0]
+        state_target = state_target.reshape(-1, state_dim)[mask.reshape(-1) > 0]
+        state_loss = self.loss_fn(state_preds, state_target)
+        
+        # Normalize the return predictions
+        rtg_preds = rtgs_preds.reshape(-1)[mask.reshape(-1) > 0]
+        rtgs_target = rtgs_target.reshape(-1)[mask.reshape(-1) > 0]
+        reward_loss = self.loss_fn(rtg_preds, rtgs_target)
 
-        loss = self.loss_fn(action_preds, action_target)
-
+        # Combine losses
+        loss = action_loss + state_loss + reward_loss
+        
+        # optimization step
         self.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), .25)
         self.optimizer.step()
 
         return loss.item()
+    
+    
+    
+    
     
     def train(self, trajectories: list, epochs: int = 1001, min_traj_length: int = 20, max_traj_length: int = 100):
         """

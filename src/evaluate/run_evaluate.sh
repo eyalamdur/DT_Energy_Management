@@ -1,6 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=evaluate_dt
 #SBATCH --cpus-per-task=6
+#SBATCH --output=logs/evaluate/evaluate.out
+#SBATCH --error=logs/evaluate/evaluate.err
 #SBATCH --gres=gpu:1
 #SBATCH --time=72:00:00          # hh:mm:ss, 72 hours
 

@@ -3,6 +3,7 @@ from evaluate_PPO import evaluate_PPO
 from decision_transformer import DecisionTransformer
 from models import get_models
 from datetime import datetime
+import utils
 import torch
 import gymnasium as gym
 import os

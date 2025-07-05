@@ -14,18 +14,28 @@ def evaluate_models(stats_file, date, env: gym.Env, dt_model, rl_model_names, rl
 
     stats_file.write("*************************************\n")
     stats_file.write(f"max episode length: {max_episode_length}, episodes: {num_episodes}\n")
-
+    seeds = [random.randrange(0, 2 ** 63 - 1) for _ in range(num_episodes)]
     stats_file.write("EVALUATE DT:\n")
     with open(f"src/evaluate/stats/{date}/DT.txt", "a") as model_file:
-        dt_mean = evaluate_DT(model_file, env, dt_model, num_episodes, max_episode_length)
-    stats_file.write(f"DT mean: {dt_mean:.3f}\n")
+        mean_reward_for_step, max_cumulative_reward, min_cumulative_reward, longest_episode =\
+            evaluate_DT(model_file, env, dt_model, seeds, num_episodes, max_episode_length)
+    stats_file.write(f"DT stats:\n"
+                     f"     mean reward for step: {mean_reward_for_step:.3f}\n"
+                     f"     max cumulative reward: {max_cumulative_reward:.3f}\n"
+                     f"     min cumulative reward: {min_cumulative_reward:.3f}\n"
+                     f"     longest episode: {longest_episode:.3f}\n")
 
     stats_file.write("EVALUATE RL:\n")
     for rl_model in rl_model_names:
         print(rl_model)
         with open(f"src/evaluate/stats/{date}/{rl_model}.txt", "a") as model_file:
-            rl_mean = evaluate_PPO(model_file, env, rl_models[rl_model], num_episodes, max_episode_length)
-        stats_file.write(f"{rl_model} mean: {rl_mean:.3f}\n")
+            mean_reward_for_step, max_cumulative_reward, min_cumulative_reward, longest_episode =\
+                evaluate_PPO(model_file, env, rl_models[rl_model], seeds, num_episodes, max_episode_length)
+        stats_file.write(f"model stats:\n"
+                         f"     mean reward for step: {mean_reward_for_step:.3f}\n"
+                         f"     max cumulative reward: {max_cumulative_reward:.3f}\n"
+                         f"     min cumulative reward: {min_cumulative_reward:.3f}\n"
+                         f"     longest episode: {longest_episode:.3f}\n")
 
     stats_file.write("*************************************\n")
 

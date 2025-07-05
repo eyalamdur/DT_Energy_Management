@@ -119,7 +119,7 @@ class Trainer:
         Args:
             epochs (int): The number of epochs to train for.
         """
-        states, actions, rtgs, timesteps, mask = self.get_batch(trajectories, min_traj_length, max_traj_length)
+        states, actions, rtgs, timesteps, mask = self.get_batch(trajectories, min_traj_length=min_traj_length, seq_max_len=max_traj_length)
         for epoch in trange(epochs, desc="DT Training"):
             loss = self.train_step(states, actions, rtgs, timesteps, mask)
             if epoch % 100 == 0:

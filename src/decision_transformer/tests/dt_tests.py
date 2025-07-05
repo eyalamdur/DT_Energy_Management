@@ -85,10 +85,10 @@ def main():
     
     # Trajectory parameters
     num_episodes = 2000             # Number of episodes to collect for each agent type
-    load = True                     # Load existing trajectories if available
+    load = False                     # Load existing trajectories if available
     traj_id = 3                     # ID of the trajectory to load or save
     min_traj_length = 96            # 1 day in ANM6Easy-v0
-    max_traj_length = 480           # 5 days in ANM6Easy-v0
+    max_traj_length = 1440           # 15 days in ANM6Easy-v0
     
     # Model parameters
     training_epochs = 10000

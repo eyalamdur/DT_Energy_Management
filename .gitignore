@@ -14,3 +14,6 @@ src/dt_project.egg-info/*
 
 # Ignore trajectories files
 **/*.pkl
+
+# Ignore logs
+logs/*

@@ -10,9 +10,8 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=eyal.amdur@campus.technion.ac.il
 
-# Activate conda/env
-source ~/miniconda3/etc/profile.d/conda.sh
-conda activate anm
+# Activate Python virtual environment
+source ./.venv/bin/activate
 
 # Run the evaluation script
 python ./src/evaluate/evaluate.py

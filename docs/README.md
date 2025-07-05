@@ -12,6 +12,8 @@ ANM6Easy enviroment:
 
 ![image info](images/ANM6easy.png)
 
+For more context, see [DT Background](BACKGROUND.md).
+
 ## Instructions
 
 We provide code in `src` directory.

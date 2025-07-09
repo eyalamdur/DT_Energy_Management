@@ -4,28 +4,37 @@ from decision_transformer import DecisionTransformer
 from models import get_models
 from datetime import datetime
 import utils
+import random
 import torch
 import gymnasium as gym
 import os
 
 def evaluate_models(stats_file, date, env: gym.Env, dt_model, rl_model_names, rl_models, num_episodes: int = 10,
                     max_episode_length: int = 1000):
-    os.makedirs(f"src/evaluate/stats/{date}", exist_ok=True)
+    os.makedirs(f"results/evaluate/{date}", exist_ok=True)
 
     stats_file.write("*************************************\n")
     stats_file.write(f"max episode length: {max_episode_length}, episodes: {num_episodes}\n")
+    seeds = [random.randrange(0, 2 ** 63 - 1) for _ in range(num_episodes)]
+    with open(f"results/evaluate/{date}/DT.txt", "a") as model_file:
+        mean_reward_for_step, max_cumulative_reward, min_cumulative_reward, longest_episode =\
+            evaluate_DT(model_file, env, dt_model, seeds, num_episodes, max_episode_length)
+    stats_file.write(f"DT stats:\n"
+                     f"     mean reward for step: {mean_reward_for_step:.3f}\n"
+                     f"     max cumulative reward: {max_cumulative_reward:.3f}\n"
+                     f"     min cumulative reward: {min_cumulative_reward:.3f}\n"
+                     f"     longest episode: {longest_episode:.3f}\n")
 
-    stats_file.write("EVALUATE DT:\n")
-    with open(f"src/evaluate/stats/{date}/DT.txt", "a") as model_file:
-        dt_mean = evaluate_DT(model_file, env, dt_model, num_episodes, max_episode_length)
-    stats_file.write(f"DT mean: {dt_mean:.3f}\n")
-
-    stats_file.write("EVALUATE RL:\n")
     for rl_model in rl_model_names:
         print(rl_model)
-        with open(f"src/evaluate/stats/{date}/{rl_model}.txt", "a") as model_file:
-            rl_mean = evaluate_PPO(model_file, env, rl_models[rl_model], num_episodes, max_episode_length)
-        stats_file.write(f"{rl_model} mean: {rl_mean:.3f}\n")
+        with open(f"results/evaluate/{date}/{rl_model}.txt", "a") as model_file:
+            mean_reward_for_step, max_cumulative_reward, min_cumulative_reward, longest_episode =\
+                evaluate_PPO(model_file, env, rl_models[rl_model], seeds, num_episodes, max_episode_length)
+        stats_file.write(f"{rl_model} stats:\n"
+                         f"     mean reward for step: {mean_reward_for_step:.3f}\n"
+                         f"     max cumulative reward: {max_cumulative_reward:.3f}\n"
+                         f"     min cumulative reward: {min_cumulative_reward:.3f}\n"
+                         f"     longest episode: {longest_episode:.3f}\n")
 
     stats_file.write("*************************************\n")
 
@@ -42,10 +51,10 @@ def main():
 
     date = datetime.now().strftime("%d.%m.%Y")
     env = utils.create_environment(env_name='ANM6Easy-v0', entry_point='gym_anm.envs.anm6_env.anm6_easy:ANM6Easy')
-    os.makedirs(f"src/evaluate/stats", exist_ok=True)
-    os.makedirs(f"src/evaluate/stats/{date}", exist_ok=True)
+    os.makedirs(f"results/evaluate", exist_ok=True)
+    os.makedirs(f"results/evaluate/{date}", exist_ok=True)
     
-    with open(f"src/evaluate/stats/{date}/evaluate_stats.txt", "a") as evaluate_file:
+    with open(f"results/evaluate/{date}/evaluate_stats.txt", "a") as evaluate_file:
         evaluate_file.write("Environment created successfully.\n")
 
         state_dim = 18
@@ -55,7 +64,7 @@ def main():
 
         dt_version = "model_3_date:2025-06-28_traj:3_loss-fn:MSELoss_batch-size:256_optimizer:AdamW_embed-dim:256_n-heads:8_n-layers:6_lr:0.0001"
         # dt_model = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim)
-        dt_model = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim, embed_dim=embed_dim, n_layer=num_layers, n_head=num_heads, max_episode_len=480)
+        dt_model = DecisionTransformer(boundaries, state_dim, act_dim, rtg_dim, embed_dim=embed_dim, n_layer=num_layers, n_head=num_heads, max_episode_len=max_episode_length)
         model_src = f"results/models/DT/{dt_version}"
         dt_model.load_state_dict(torch.load(model_src))
         evaluate_file.write("DT models loaded successfully.\n")

@@ -4,23 +4,26 @@ import torch
 import utils
 
 
-def evaluate_DT (stats_file, env: gym.Env, model, num_episodes: int = 10, max_episode_length = 1000):
-    returns = []
+def evaluate_DT (stats_file, env: gym.Env, model, seeds, num_episodes: int = 10, max_episode_length = 1000):
+    cumulative_rewords, mean_rewards, episodes_lengths = [], [], []
 
     for episode in range(num_episodes):
         print("episode:", episode)
-        stats_file.write(f"episode: {episode}\n")
-        ret = episode_evaluation_DT(stats_file, env, model, max_episode_length)
-        returns.append(ret)
-        stats_file.write(f"episode {episode} : ret: {ret:.3f}")
+        stats_file.write(f"episode: {episode}, seed: {seeds[episode]}\n")
+        cumulative_reword, mean_reward, episode_length = episode_evaluation_DT(stats_file, env, model,
+                                                                                seeds[episode], max_episode_length)
+        cumulative_rewords.append(cumulative_reword)
+        mean_rewards.append(mean_reward)
+        episodes_lengths.append(episode_length)
+        stats_file.write(f"episode {episode} : cumulative_reword: {cumulative_reword:.3f}, mean_reward: {mean_reward:.3f}, steps: {episode_length}")
 
-    return np.mean(returns)
+    return np.mean(mean_rewards), np.max(cumulative_rewords), np.min(cumulative_rewords), np.max(episodes_lengths)
 
 
-def episode_evaluation_DT (stats_file, env: gym.Env, model, max_episode_length = 1000, target_rtg = 1000):
+def episode_evaluation_DT (stats_file, env: gym.Env, model, seed, max_episode_length = 1000, target_rtg = 1000):
 
     # Initialize evaluate params
-    state, _ = env.reset()
+    state, _ = env.reset(seed=seed)
     done = False
     cumulative_reword = 0
     states, actions, rtgs, timestamp = [], [], [], []
@@ -59,5 +62,5 @@ def episode_evaluation_DT (stats_file, env: gym.Env, model, max_episode_length =
         cumulative_reword += reward
         steps += 1
 
-    return cumulative_reword / steps
+    return cumulative_reword, cumulative_reword / steps, steps
 

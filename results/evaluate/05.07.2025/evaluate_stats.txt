@@ -1,0 +1,22 @@
+Environment created successfully.
+DT models loaded successfully.
+RL models loaded successfully.
+*************************************
+max episode length: 480, episodes: 1000
+DT stats:
+     mean reward for step: -0.077
+     max cumulative reward: -22.378
+     min cumulative reward: -54.451
+     longest episode: 480.000
+PPO stats:
+     mean reward for step: -0.068
+     max cumulative reward: -19.489
+     min cumulative reward: -47.214
+     longest episode: 480.000
+TD3 stats:
+     mean reward for step: -6481.811
+     max cumulative reward: -20031.736
+     min cumulative reward: -24504.448
+     longest episode: 98.000
+*************************************
+Evaluation completed successfully.

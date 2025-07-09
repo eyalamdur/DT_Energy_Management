@@ -5,9 +5,10 @@ import utils
 def get_models(env) -> list:
     models_dir = "results/models/"
 
-    ppo_model = train_ppo.load_ppo(models_dir + "PPO/ppo_1.zip") if utils.is_model_available(models_dir + "PPO/ppo_1.zip") else train_ppo.train_ppo(env)
-    td3_model = train_td3.load_td3(models_dir + "TD3/td3_1.zip") if utils.is_model_available(models_dir + "TD3/td3_1.zip") else train_td3.train_td3(env)
-    return [ppo_model, td3_model]
+    ppo_model = train_ppo.load_ppo(models_dir + "PPO/ppo_5.zip") if utils.is_model_available(models_dir + "PPO/ppo_5.zip") else train_ppo.train_ppo(env)
+    #td3_model = train_td3.load_td3(models_dir + "TD3/td3_1.zip") if utils.is_model_available(models_dir + "TD3/td3_1.zip") else train_td3.train_td3(env)
+    #return [ppo_model, td3_model]
+    return [ppo_model]  # Currently only using PPO, TD3 isn't good enough yet
 
 def main():
     """

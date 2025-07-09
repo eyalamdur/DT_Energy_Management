@@ -7,7 +7,6 @@ from stable_baselines3.common.callbacks import BaseCallback
 
 MAX_EPISODE_STEPS = 96  # 24 hours × (60 minutes ÷ 15 minutes) = 96 steps per episode
 
-
 def train_ppo(env: gym.Env, num_episodes: int = 1000) -> (PPO, list):
     """
     Train a PPO agent on the given environment and collect trajectories.
@@ -48,9 +47,10 @@ def train_ppo(env: gym.Env, num_episodes: int = 1000) -> (PPO, list):
     # Save model
     model_id = utils.get_next_run_id("results/models/PPO", "models")
     model.save(f"results/models/PPO/ppo_{model_id}")
-
+    utils.save_trajectories(traj_cb.trajectories, f"results/trajectories/PPO_train/ppo_{model_id}_trajectories.pkl")
+    
     # Return both model and collected trajectories
-    return model, traj_cb.trajectories
+    return model
 
 
 def load_ppo(model_path: str) -> PPO:

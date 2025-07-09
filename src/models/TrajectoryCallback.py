@@ -16,11 +16,14 @@ class TrajectoryCallback(BaseCallback):
         states = buf.observations.copy()
         actions = buf.actions.copy()
         rewards = buf.rewards.copy()
-        dones = buf.dones.copy()
+        # In SB3, `episode_starts` indicates the first step of each episode
+        ep_starts = buf.episode_starts.copy()
 
-        # Truncate at episode end if done
-        if dones.any():
-            end_idx = int(np.where(dones)[0][0]) + 1
+        # Truncate at episode end if a new episode starts in the buffer
+        # Skip index 0 since it's always True
+        if ep_starts[1:].any():
+            # Index of first new episode start after the initial step
+            end_idx = int(np.where(ep_starts[1:])[0][0]) + 1
             states = states[:end_idx]
             actions = actions[:end_idx]
             rewards = rewards[:end_idx]

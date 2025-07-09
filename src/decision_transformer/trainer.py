@@ -74,7 +74,7 @@ class Trainer:
         torch.tensor(mask_batch, dtype=torch.long, device=self.device)
         )
         
-    def train_step(self, states, actions, rtgs, timesteps, mask):
+    def train_step(self, states, actions, rtgs, timesteps, mask, to_train = True):
         """
         Train the model using the collected trajectories.
         Args:
@@ -106,21 +106,24 @@ class Trainer:
 
         loss = self.loss_fn(action_preds, action_target)
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), .25)
-        self.optimizer.step()
+        if to_train:
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), .25)
+            self.optimizer.step()
 
         return loss.item()
     
-    def train(self, trajectories: list, epochs: int = 1001, min_traj_length: int = 20, max_traj_length: int = 100):
+    def train(self, trajectories: list, trajectories_val: list, epochs: int = 1001, min_traj_length: int = 20, max_traj_length: int = 100):
         """
         Train the model for a specified number of epochs.
         Args:
             epochs (int): The number of epochs to train for.
         """
         states, actions, rtgs, timesteps, mask = self.get_batch(trajectories, min_traj_length=min_traj_length, seq_max_len=max_traj_length)
+        states_val, actions_val, rtgs_val, timesteps_val, mask_val = self.get_batch(trajectories_val, min_traj_length=min_traj_length, seq_max_len=max_traj_length)
         for epoch in trange(epochs, desc="DT Training"):
             loss = self.train_step(states, actions, rtgs, timesteps, mask)
+            loss_val = self.train_step(states_val, actions_val, rtgs_val, timesteps_val, mask_val, False)
             if epoch % 100 == 0:
-                print(f"Epoch: {epoch} - Loss: {loss:.4f}")
+                print(f"Epoch: {epoch} - train loss: {loss:.4f}, validation loss: {loss_val:.4f}")

@@ -59,7 +59,7 @@ def load_trajectories(env, traj_id):
             all_trajectories += traj_data
     return (all_trajectories, traj_id)
 
-def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, min_traj_length, max_traj_length):
+def train_dt_model(trajectories, trajectories_val, dt_model, batch_size, loss_fn, epochs, device, min_traj_length, max_traj_length):
     """
     Train Decision Transformer models.
     Args:
@@ -68,7 +68,7 @@ def train_dt_model(trajectories, dt_model, batch_size, loss_fn, epochs, device, 
     """
     # Create the trainer
     trainer = Trainer(dt_model, None, batch_size, loss_fn=loss_fn, device=device)
-    trainer.train(trajectories[0], epochs=epochs, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
+    trainer.train(trajectories[0], trajectories_val[0], epochs=epochs, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
     utils.save_model(
         model=dt_model,
         trajectory_id=trajectories[1],
@@ -86,7 +86,8 @@ def main():
     # Trajectory parameters
     num_episodes = 2000             # Number of episodes to collect for each agent type
     load = False                     # Load existing trajectories if available
-    traj_id = 3                     # ID of the trajectory to load or save
+    traj_id = 0                     # ID of the trajectory to load or save
+    val_traj_id = 1                 # ID of the trajectories of the validation set
     min_traj_length = 96            # 1 day in ANM6Easy-v0
     max_traj_length = 1440           # 15 days in ANM6Easy-v0
     
@@ -108,6 +109,7 @@ def main():
     # Collect trajectories & get dimensions and The environment's action boundaries
     utils.color_print(f"Collecting trajectories...")
     trajectories = load_trajectories(env, traj_id=traj_id) if load else generate_trajectories(env, num_episodes, min_traj_length, max_traj_length)
+    trajectories_val = load_trajectories(env, traj_id=val_traj_id) if load else generate_trajectories(env, num_episodes, min_traj_length, max_traj_length)
     state_dim, act_dim, rtg_dim = get_dimensions(trajectories[0])
     boundaries = env.action_space.low, env.action_space.high 
     
@@ -117,7 +119,7 @@ def main():
     utils.color_print("Models created successfully.")
     
     # Train the Decision Transformer models
-    train_dt_model(trajectories, dt, batch_size=batch_size, loss_fn=loss_fn, epochs=training_epochs, device=device, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
+    train_dt_model(trajectories, trajectories_val, dt, batch_size=batch_size, loss_fn=loss_fn, epochs=training_epochs, device=device, min_traj_length=min_traj_length, max_traj_length=max_traj_length)
     utils.color_print("Training completed successfully.", color="green")
 
 if __name__ == "__main__":

@@ -11,12 +11,12 @@ import os
 
 def evaluate_models(stats_file, date, env: gym.Env, dt_model, rl_model_names, rl_models, num_episodes: int = 10,
                     max_episode_length: int = 1000):
-    os.makedirs(f"src/evaluate/stats/{date}", exist_ok=True)
+    os.makedirs(f"results/evaluate/{date}", exist_ok=True)
 
     stats_file.write("*************************************\n")
     stats_file.write(f"max episode length: {max_episode_length}, episodes: {num_episodes}\n")
     seeds = [random.randrange(0, 2 ** 63 - 1) for _ in range(num_episodes)]
-    with open(f"src/evaluate/stats/{date}/DT.txt", "a") as model_file:
+    with open(f"results/evaluate/{date}/DT.txt", "a") as model_file:
         mean_reward_for_step, max_cumulative_reward, min_cumulative_reward, longest_episode =\
             evaluate_DT(model_file, env, dt_model, seeds, num_episodes, max_episode_length)
     stats_file.write(f"DT stats:\n"
@@ -27,7 +27,7 @@ def evaluate_models(stats_file, date, env: gym.Env, dt_model, rl_model_names, rl
 
     for rl_model in rl_model_names:
         print(rl_model)
-        with open(f"src/evaluate/stats/{date}/{rl_model}.txt", "a") as model_file:
+        with open(f"results/evaluate/{date}/{rl_model}.txt", "a") as model_file:
             mean_reward_for_step, max_cumulative_reward, min_cumulative_reward, longest_episode =\
                 evaluate_PPO(model_file, env, rl_models[rl_model], seeds, num_episodes, max_episode_length)
         stats_file.write(f"{rl_model} stats:\n"
@@ -51,10 +51,10 @@ def main():
 
     date = datetime.now().strftime("%d.%m.%Y")
     env = utils.create_environment(env_name='ANM6Easy-v0', entry_point='gym_anm.envs.anm6_env.anm6_easy:ANM6Easy')
-    os.makedirs(f"src/evaluate/stats", exist_ok=True)
-    os.makedirs(f"src/evaluate/stats/{date}", exist_ok=True)
+    os.makedirs(f"results/evaluate", exist_ok=True)
+    os.makedirs(f"results/evaluate/{date}", exist_ok=True)
     
-    with open(f"src/evaluate/stats/{date}/evaluate_stats.txt", "a") as evaluate_file:
+    with open(f"results/evaluate/{date}/evaluate_stats.txt", "a") as evaluate_file:
         evaluate_file.write("Environment created successfully.\n")
 
         state_dim = 18

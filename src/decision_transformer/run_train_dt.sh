@@ -3,7 +3,7 @@
 #SBATCH --output=logs/models/train_DT_model.out
 #SBATCH --error=logs/models/train_DT_model.err
 #SBATCH --cpus-per-task=6
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH --time=72:00:00          # hh:mm:ss, 72 hours
 
 # --- Email notifications ---
@@ -14,4 +14,4 @@
 source ./.venv/bin/activate
 
 # Run Python script
-python ./src/decision_transformer/tests/dt_tests.py
+python ./src/decision_transformer/train/dt_train.py

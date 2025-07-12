@@ -87,16 +87,16 @@ def main():
     # Trajectory parameters
     num_episodes = 2000              # Number of episodes to collect for each agent type
     load_train = True                # Load existing trajectories if available
-    load_val = True                 # Load validation trajectories if available
-    traj_id = 3                      # ID of the trajectory to load or save
-    val_traj_id = 3                  # ID of the trajectories of the validation set
+    load_val = True                  # Load validation trajectories if available
+    traj_id = 5                      # ID of the trajectory to load or save
+    val_traj_id = 6                  # ID of the trajectories of the validation set
     min_traj_length = 96             # 1 day in ANM6Easy-v0
-    max_traj_length = 480            # 15 days in ANM6Easy-v0
+    max_traj_length = 512            # 15 days in ANM6Easy-v0
     
     # Model parameters
     training_epochs = 5000
-    batch_size = 256                # Batch size for training
-    embed_dim = 256                 # Embedding dimension for the Decision Transformer
+    batch_size = 128                # Batch size for training
+    embed_dim = 128                 # Embedding dimension for the Decision Transformer
     num_layers = 6                  # Number of layers in the Decision Transformer
     num_heads = 8                   # Number of attention heads in the Decision Transformer
     loss_fn = torch.nn.MSELoss()
@@ -112,7 +112,11 @@ def main():
     utils.color_print(f"Collecting trajectories...")
     trajectories = load_trajectories(env, traj_id=traj_id) if load_train else generate_trajectories(env, num_episodes, min_traj_length, max_traj_length)
     trajectories_val = load_trajectories(env, traj_id=val_traj_id) if load_val else generate_trajectories(env, num_episodes, min_traj_length, max_traj_length)
-
+    
+    # Truncate all trajectories to chunks of exactly max_traj_length (512) each, in one line
+    trajectories = ([{k: v[:max_traj_length] for k, v in traj.items()} for traj in trajectories[0]], trajectories[1])
+    trajectories_val = ([{k: v[:max_traj_length] for k, v in traj.items()} for traj in trajectories_val[0]], trajectories_val[1])
+    
     state_dim, act_dim, rtg_dim = get_dimensions(trajectories[0])
     boundaries = env.action_space.low, env.action_space.high 
     

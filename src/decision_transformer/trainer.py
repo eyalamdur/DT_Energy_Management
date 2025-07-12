@@ -74,36 +74,34 @@ class Trainer:
         torch.tensor(mask_batch, dtype=torch.long, device=self.device)
         )
         
-    def train_step(self, states, actions, rtgs, timesteps, mask, to_train = True):
-        """
-        Train the model using the collected trajectories.
-        Args:
-            states (torch.Tensor): The states of the environment.
-            actions (torch.Tensor): The actions taken in the environment.
-            rtgs (torch.Tensor): The reward-to-go values.
-            timesteps (torch.Tensor): The time steps in the episode.
-            mask (torch.Tensor): The mask for padding.
-        Returns:
-            loss (float): The loss value after the training step.
-        """
-        
-        # Move tensors to the appropriate device
+    def train_step(self, states, actions, rtgs, timesteps, mask, to_train=True):
+        # Move to device
         states = states.to(self.device)
         actions = actions.to(self.device)
         rtgs = rtgs.to(self.device)
         timesteps = timesteps.to(self.device)
         mask = mask.to(self.device)
 
-        # Clone actions to avoid modifying the original tensor
-        action_target = torch.clone(actions)
+        # Clone for targets
+        action_target = actions.clone()
 
-        # Call forward pass
+        # Forward pass
         _, action_preds, _ = self.model.forward(states, actions, rtgs, timesteps, mask)
 
-        act_dim = action_preds.shape[2]
-        action_preds = action_preds.reshape(-1, act_dim)[mask.reshape(-1) > 0]
-        action_target = action_target.reshape(-1, act_dim)[mask.reshape(-1) > 0]
+        B, new_seq_len, act_dim = action_preds.shape
 
+        # Trim the mask to new_seq_len
+        mask = mask[:, :new_seq_len]            # now (B, new_seq_len)
+        flat_mask = mask.reshape(-1) > 0        # length B*new_seq_len
+
+        # Trim action_target to the same new_seq_len
+        action_target = action_target[:, :new_seq_len, :]  # (B, new_seq_len, act_dim)
+
+        # Flatten and apply mask
+        action_preds = action_preds.reshape(-1, act_dim)[flat_mask]
+        action_target = action_target.reshape(-1, act_dim)[flat_mask]
+
+        # Compute loss
         loss = self.loss_fn(action_preds, action_target)
 
         if to_train:

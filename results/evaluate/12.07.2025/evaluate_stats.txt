@@ -1,0 +1,16 @@
+Environment created successfully.
+DT model model_6_date:2025-07-12_traj:5_loss-fn:MSELoss_batch-size:128_optimizer:AdamW_embed-dim:128_n-heads:8_n-layers:6_lr:0.0001 loaded successfully.
+DT model val-model_7_date:2025-07-12_traj:5_loss-fn:MSELoss_batch-size:128_optimizer:AdamW_embed-dim:128_n-heads:8_n-layers:6_lr:0.0001 loaded successfully.
+RL models loaded successfully.
+*************************************
+max episode length: 512, episodes: 1000
+model_6 stats:
+     mean reward for step: -1.681
+     max cumulative reward: -764.559
+     min cumulative reward: -937.468
+     longest episode: 512.000
+val-model_7 stats:
+     mean reward for step: -23.292
+     max cumulative reward: -7071.306
+     min cumulative reward: -24866.944
+     longest episode: 512.000

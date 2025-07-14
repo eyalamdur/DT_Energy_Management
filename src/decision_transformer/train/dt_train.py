@@ -94,7 +94,7 @@ def main():
     max_traj_length = 512            # 15 days in ANM6Easy-v0
     
     # Model parameters
-    training_epochs = 5000
+    training_epochs = 100
     batch_size = 128                # Batch size for training
     embed_dim = 128                 # Embedding dimension for the Decision Transformer
     num_layers = 6                  # Number of layers in the Decision Transformer

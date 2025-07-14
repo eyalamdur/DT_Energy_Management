@@ -8,9 +8,5 @@
 **/__pycache__/
 src/dt_project.egg-info/*
 
-# Ignore models implementation files
-**/models/**/*.zip
-**/models/DT/*_*
-
 # Ignore trajectories files
 **/*.pkl

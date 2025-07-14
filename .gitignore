@@ -10,3 +10,12 @@ src/dt_project.egg-info/*
 
 # Ignore trajectories files
 **/*.pkl
+
+# ── ignore all files under results/evaluate/date-folders ──
+results/evaluate/**
+
+# ── make sure Git still sees the date-folders themselves ──
+!results/evaluate/*/
+
+# ── allow (don’t ignore) any .zip inside them ──
+!results/evaluate/**/*.zip

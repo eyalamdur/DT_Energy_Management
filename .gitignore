@@ -8,9 +8,11 @@
 **/__pycache__/
 src/dt_project.egg-info/*
 
-# Ignore models implementation files
-**/models/**/*.zip
-**/models/DT/*_*
-
 # Ignore trajectories files
 **/*.pkl
+
+# ignore all files under results/evaluate/date-folders but allow any .zip inside them
+results/evaluate/**
+!results/evaluate/*/
+!results/evaluate/**/*.zip
+

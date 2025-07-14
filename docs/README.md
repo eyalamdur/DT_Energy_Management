@@ -50,14 +50,30 @@ uv pip install -e .
 
 ### Example usage
 
-Evaluation can be produced with the following:
+#### 🤖 To train the DT model:
+
+```
+python src/decision_transformer/train/dt_train.py
+```
+> **Note:**  
+> Make sure to choose the DT model parameters and trajectories id number to train on.
+
+#### 🧮 To train the baseline models:
+
+```
+python src/models/train_models.py
+```
+> **Note:**  
+> Make sure to choose the models parameters (PPO & TD3) you would like to train with.
+
+#### 📊 Evaluation can be produced with the following:
 
 ```
 python src/evaluate/evaluate.py
 ```
 
 > **Note:**  
-> Make sure to choose the DT model you want to check and that you have PPO agent to load.
+> Make sure to choose the DT model you want to check and that you have baseline models to load.
 
 ### Before Running
 Make sure to configure the environment variables and paths as required by your setup before running the evaluation script.

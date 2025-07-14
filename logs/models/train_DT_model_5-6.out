@@ -1,0 +1,55 @@
+[94mEnvironment created successfully.[0m
+[94mCollecting trajectories...[0m
+[94mModels created successfully.[0m
+Epoch: 0 - train loss: 0.5505, validation loss: 0.4818
+Epoch: 100 - train loss: 0.1037, validation loss: 0.1642
+Epoch: 200 - train loss: 0.0846, validation loss: 0.1872
+Epoch: 300 - train loss: 0.0642, validation loss: 0.2074
+Epoch: 400 - train loss: 0.0539, validation loss: 0.2117
+Epoch: 500 - train loss: 0.0487, validation loss: 0.2028
+Epoch: 600 - train loss: 0.0480, validation loss: 0.2007
+Epoch: 700 - train loss: 0.0462, validation loss: 0.1966
+Epoch: 800 - train loss: 0.0471, validation loss: 0.1943
+Epoch: 900 - train loss: 0.0458, validation loss: 0.1903
+Epoch: 1000 - train loss: 0.0442, validation loss: 0.1923
+Epoch: 1100 - train loss: 0.0447, validation loss: 0.1905
+Epoch: 1200 - train loss: 0.0442, validation loss: 0.1884
+Epoch: 1300 - train loss: 0.0442, validation loss: 0.1851
+Epoch: 1400 - train loss: 0.0441, validation loss: 0.1851
+Epoch: 1500 - train loss: 0.0443, validation loss: 0.1868
+Epoch: 1600 - train loss: 0.0440, validation loss: 0.1868
+Epoch: 1700 - train loss: 0.0434, validation loss: 0.1849
+Epoch: 1800 - train loss: 0.0438, validation loss: 0.1861
+Epoch: 1900 - train loss: 0.0442, validation loss: 0.1855
+Epoch: 2000 - train loss: 0.0429, validation loss: 0.1812
+Epoch: 2100 - train loss: 0.0437, validation loss: 0.1820
+Epoch: 2200 - train loss: 0.0435, validation loss: 0.1787
+Epoch: 2300 - train loss: 0.0432, validation loss: 0.1805
+Epoch: 2400 - train loss: 0.0433, validation loss: 0.1788
+Epoch: 2500 - train loss: 0.0429, validation loss: 0.1790
+Epoch: 2600 - train loss: 0.0433, validation loss: 0.1794
+Epoch: 2700 - train loss: 0.0429, validation loss: 0.1786
+Epoch: 2800 - train loss: 0.0428, validation loss: 0.1772
+Epoch: 2900 - train loss: 0.0430, validation loss: 0.1771
+Epoch: 3000 - train loss: 0.0428, validation loss: 0.1805
+Epoch: 3100 - train loss: 0.0429, validation loss: 0.1762
+Epoch: 3200 - train loss: 0.0424, validation loss: 0.1794
+Epoch: 3300 - train loss: 0.0421, validation loss: 0.1780
+Epoch: 3400 - train loss: 0.0421, validation loss: 0.1785
+Epoch: 3500 - train loss: 0.0417, validation loss: 0.1796
+Epoch: 3600 - train loss: 0.0422, validation loss: 0.1775
+Epoch: 3700 - train loss: 0.0423, validation loss: 0.1773
+Epoch: 3800 - train loss: 0.0421, validation loss: 0.1776
+Epoch: 3900 - train loss: 0.0420, validation loss: 0.1774
+Epoch: 4000 - train loss: 0.0420, validation loss: 0.1783
+Epoch: 4100 - train loss: 0.0426, validation loss: 0.1766
+Epoch: 4200 - train loss: 0.0421, validation loss: 0.1792
+Epoch: 4300 - train loss: 0.0423, validation loss: 0.1753
+Epoch: 4400 - train loss: 0.0417, validation loss: 0.1768
+Epoch: 4500 - train loss: 0.0421, validation loss: 0.1770
+Epoch: 4600 - train loss: 0.0421, validation loss: 0.1749
+Epoch: 4700 - train loss: 0.0423, validation loss: 0.1768
+Epoch: 4800 - train loss: 0.0419, validation loss: 0.1762
+Epoch: 4900 - train loss: 0.0421, validation loss: 0.1748
+[✓] Saved DT model to results/models/DT/model_6_date:2025-07-12_traj:5_loss-fn:MSELoss_batch-size:128_optimizer:AdamW_embed-dim:128_n-heads:8_n-layers:6_lr:0.0001
+[92mTraining completed successfully.[0m

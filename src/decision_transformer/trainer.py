@@ -74,53 +74,54 @@ class Trainer:
         torch.tensor(mask_batch, dtype=torch.long, device=self.device)
         )
         
-    def train_step(self, states, actions, rtgs, timesteps, mask):
-        """
-        Train the model using the collected trajectories.
-        Args:
-            states (torch.Tensor): The states of the environment.
-            actions (torch.Tensor): The actions taken in the environment.
-            rtgs (torch.Tensor): The reward-to-go values.
-            timesteps (torch.Tensor): The time steps in the episode.
-            mask (torch.Tensor): The mask for padding.
-        Returns:
-            loss (float): The loss value after the training step.
-        """
-        
-        # Move tensors to the appropriate device
+    def train_step(self, states, actions, rtgs, timesteps, mask, to_train=True):
+        # Move to device
         states = states.to(self.device)
         actions = actions.to(self.device)
         rtgs = rtgs.to(self.device)
         timesteps = timesteps.to(self.device)
         mask = mask.to(self.device)
 
-        # Clone actions to avoid modifying the original tensor
-        action_target = torch.clone(actions)
+        # Clone for targets
+        action_target = actions.clone()
 
-        # Call forward pass
+        # Forward pass
         _, action_preds, _ = self.model.forward(states, actions, rtgs, timesteps, mask)
 
-        act_dim = action_preds.shape[2]
-        action_preds = action_preds.reshape(-1, act_dim)[mask.reshape(-1) > 0]
-        action_target = action_target.reshape(-1, act_dim)[mask.reshape(-1) > 0]
+        B, new_seq_len, act_dim = action_preds.shape
 
+        # Trim the mask to new_seq_len
+        mask = mask[:, :new_seq_len]            # now (B, new_seq_len)
+        flat_mask = mask.reshape(-1) > 0        # length B*new_seq_len
+
+        # Trim action_target to the same new_seq_len
+        action_target = action_target[:, :new_seq_len, :]  # (B, new_seq_len, act_dim)
+
+        # Flatten and apply mask
+        action_preds = action_preds.reshape(-1, act_dim)[flat_mask]
+        action_target = action_target.reshape(-1, act_dim)[flat_mask]
+
+        # Compute loss
         loss = self.loss_fn(action_preds, action_target)
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), .25)
-        self.optimizer.step()
+        if to_train:
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), .25)
+            self.optimizer.step()
 
         return loss.item()
     
-    def train(self, trajectories: list, epochs: int = 1001, min_traj_length: int = 20, max_traj_length: int = 100):
+    def train(self, trajectories: list, trajectories_val: list, epochs: int = 1001, min_traj_length: int = 20, max_traj_length: int = 100):
         """
         Train the model for a specified number of epochs.
         Args:
             epochs (int): The number of epochs to train for.
         """
         states, actions, rtgs, timesteps, mask = self.get_batch(trajectories, min_traj_length=min_traj_length, seq_max_len=max_traj_length)
+        states_val, actions_val, rtgs_val, timesteps_val, mask_val = self.get_batch(trajectories_val, min_traj_length=min_traj_length, seq_max_len=max_traj_length)
         for epoch in trange(epochs, desc="DT Training"):
             loss = self.train_step(states, actions, rtgs, timesteps, mask)
+            loss_val = self.train_step(states_val, actions_val, rtgs_val, timesteps_val, mask_val, False)
             if epoch % 100 == 0:
-                print(f"Epoch: {epoch} - Loss: {loss:.4f}")
+                print(f"Epoch: {epoch} - train loss: {loss:.4f}, validation loss: {loss_val:.4f}")

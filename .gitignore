@@ -3,6 +3,7 @@
 
 # Ignore environment files & python version
 .python-version
+.gitignore
 
 # Ignore Python cache files
 **/__pycache__/
